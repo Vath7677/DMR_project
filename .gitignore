@@ -1,0 +1,23 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# PHP / Composer
+backend/vendor/
+backend/phinx.log
+
+# Mac OS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.local
+
+# Vue/Vite build output
+frontend/dist/
+frontend/dist-ssr/

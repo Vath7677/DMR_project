@@ -1,0 +1,12 @@
+{
+    "require": {
+        "robmorgan/phinx": "^0.16.12",
+        "illuminate/database": "^10.0",
+        "illuminate/events": "^10.0"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.4"
+        }
+    }
+}
