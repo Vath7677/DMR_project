@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1d4ed8;
+  --color-primary: #0d9488; /* Teal 600 */
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
 }

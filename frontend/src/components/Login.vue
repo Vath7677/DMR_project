@@ -10,7 +10,7 @@
       <div class="space-y-8 pr-0 lg:pr-12">
         
         <!-- Badge -->
-        <div class="inline-flex items-center space-x-2 bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide">
+        <div class="inline-flex items-center space-x-2 bg-teal-50 text-teal-700 px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide">
           <Activity class="w-4 h-4" />
           <span>DMR HOSPITAL PORTAL</span>
         </div>
@@ -18,8 +18,8 @@
         <!-- Headline -->
         <h1 class="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
           Welcome to the <br/>
-          <span class="text-primary">Healthcare</span> <br/>
-          <span class="text-primary">Dashboard</span>
+          <span class="text-teal-600">Healthcare</span> <br/>
+          <span class="text-teal-600">Dashboard</span>
         </h1>
 
         <!-- Subheadline -->
@@ -30,12 +30,12 @@
         <!-- Features Cards -->
         <div class="flex flex-col sm:flex-row gap-6 pt-6">
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex-1">
-            <Calendar class="w-6 h-6 text-primary mb-3" />
+            <Calendar class="w-6 h-6 text-teal-600 mb-3" />
             <h3 class="font-bold text-gray-900 mb-1">Quick Scheduling</h3>
             <p class="text-sm text-gray-500">Manage doctor appointments efficiently in real-time.</p>
           </div>
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex-1">
-            <Lock class="w-6 h-6 text-primary mb-3" />
+            <Lock class="w-6 h-6 text-teal-600 mb-3" />
             <h3 class="font-bold text-gray-900 mb-1">Secure Records</h3>
             <p class="text-sm text-gray-500">Patient data is protected by industry-leading encryption.</p>
           </div>
@@ -61,35 +61,37 @@
                 v-model="email" 
                 type="email" 
                 placeholder="doctor@gamil.com" 
-                class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary
-                focus:border-primary sm:text-sm bg-gray-50/50 outline-none transition-colors"
+                class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600
+                focus:border-teal-600 sm:text-sm bg-gray-50/50 outline-none transition-colors"
                 required/>
             </div>
           </div>
 
-          <!-- Password -->
+          <!-- Password Field with Show/Hide -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock class="h-5 w-5 text-gray-400" />
               </div>
-              <!-- using to click on button to shoe an password or not -->
-              <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" 
-                class="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary 
-                focus:border-primary sm:text-sm bg-gray-50/50 outline-none transition-colors"
-                required
-              />
-              <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" @click="togglePassword">
-                <Eye class="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
-              </div>
+              <input 
+                v-model="password" 
+                :type="showPassword ? 'text' : 'password'" 
+                placeholder="••••••••" 
+                class="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 
+                focus:border-teal-600 sm:text-sm bg-gray-50/50 outline-none transition-colors"
+                required/>
+              <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <EyeOff v-if="showPassword" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <Eye v-else class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              </button>
             </div>
           </div>
 
-          <!-- tick-box remember -->
-          <div class="flex items-center mt-4">
-            <label class="flex items-center">
-              <input type="checkbox" v-model="rememberMe" class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" />
+          <!-- Remember Me & Forgot Password -->
+          <div class="flex items-center justify-between mt-6">
+            <label class="flex items-center cursor-pointer group">
+              <input type="checkbox" v-model="rememberMe" class="rounded border-gray-300 text-teal-600 focus:ring-teal-600 h-4 w-4 accent-teal-600" />
               <span class="ml-2 text-sm text-gray-600">Remember me</span>
             </label>
           </div>
@@ -98,7 +100,7 @@
           <button 
             type="submit" :disabled="isLocked"
             class="w-full font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm mt-6 text-white"
-            :class="isLocked ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-blue-700'">
+            :class="isLocked ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'">
             {{ isLocked ? `Try again in ${lockoutTimeRemaining}s` : 'Sign In' }}
           </button>
           
