@@ -26,7 +26,7 @@ Before starting, ensure you have the following installed on your laptop:
 1. Open your Terminal (Mac) or Command Prompt / PowerShell (Windows).
 2. Navigate to the `backend` directory of the project:
    ```bash
-   cd /Applications/XAMPP/xamppfiles/htdocs/DMR_project/backend
+   cd backend
    ```
    *(Note for Windows users: `cd C:\xampp\htdocs\DMR_project\backend`)*
 3. Install all required PHP dependencies:
