@@ -46,7 +46,7 @@ Before starting, ensure you have the following installed on your laptop:
 1. Open a **New** Terminal window (keep the old one open if you like).
 2. Navigate to the `frontend` directory:
    ```bash
-   cd /Applications/XAMPP/xamppfiles/htdocs/DMR_project/frontend
+   cd frontend
    ```
    *(Note for Windows users: `cd C:\xampp\htdocs\DMR_project\frontend`)*
 3. Install all required Node dependencies:
