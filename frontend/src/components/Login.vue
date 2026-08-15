@@ -30,9 +30,9 @@
         <!-- Features Cards -->
         <div class="flex flex-col sm:flex-row gap-6 pt-6">
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex-1">
-            <Calendar class="w-6 h-6 text-teal-600 mb-3" />
-            <h3 class="font-bold text-gray-900 mb-1">Quick Scheduling</h3>
-            <p class="text-sm text-gray-500">Manage doctor appointments efficiently in real-time.</p>
+            <Sparkles class="w-6 h-6 text-teal-600 mb-3" />
+            <h3 class="font-bold text-gray-900 mb-1">Simple & Intuitive</h3>
+            <p class="text-sm text-gray-500">Designed to be incredibly easy to use, so you can focus on patient care.</p>
           </div>
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex-1">
             <Lock class="w-6 h-6 text-teal-600 mb-3" />
@@ -126,7 +126,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '../services/api';
-import { Activity, Calendar, Lock, Mail, Eye } from 'lucide-vue-next';
+import { Activity, Sparkles, Lock, Mail, Eye, EyeOff } from 'lucide-vue-next';
 
 const router = useRouter();
 
