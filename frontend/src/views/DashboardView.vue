@@ -123,7 +123,7 @@
           <!-- Card 3 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center hover:shadow-md transition-shadow">
             <div class="w-[52px] h-[52px] flex items-center justify-center bg-yellow-50 text-yellow-600 rounded-xl mr-4 shrink-0">
-              <FilePlus class="w-6 h-6" />
+              <FileText class="w-6 h-6" />
             </div>
             <div>
               <p class="text-[13px] font-medium text-slate-500">Health Records Logged</p>
