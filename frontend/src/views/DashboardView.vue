@@ -26,6 +26,10 @@
           <FileText class="w-5 h-5" />
           <span>Health Records</span>
         </router-link>
+        <router-link to="/settings" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
+          <Settings class="w-5 h-5" />
+          <span>Settings</span>
+        </router-link>
       </nav>
 
       <!-- logout button -->
@@ -39,13 +43,41 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col h-screen overflow-hidden">
-      <header class="h-[76px] bg-white border-b border-slate-100 flex items-center justify-end px-8 z-0">
+      <header class="h-[76px] bg-white border-b border-slate-100 flex items-center justify-end px-8 z-50 relative">
         <div class="flex items-center">
-          <div class="flex items-center gap-3">
+          <button @click="isProfileOpen = !isProfileOpen" class="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-lg transition-colors focus:outline-none">
             <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-teal-500" />
-            <div class="flex flex-col">
+            <div class="flex flex-col text-left">
               <span class="text-[14px] font-bold text-slate-800 leading-tight">Dr. Sarah Jenkins</span>
               <span class="text-[12px] text-slate-500 leading-tight">Chief Medical Officer</span>
+            </div>
+            <ChevronDown class="w-4 h-4 text-slate-400 ml-1" />
+          </button>
+          
+          <!-- Click outside overlay -->
+          <div v-if="isProfileOpen" @click="isProfileOpen = false" class="fixed inset-0 z-40"></div>
+          
+          <!-- Profile Dropdown -->
+          <div v-if="isProfileOpen" class="absolute top-[70px] right-8 w-[280px] bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden" style="animation: fadeIn 0.2s ease-in-out;">
+            <div class="p-5 border-b border-slate-100 relative">
+              <button @click="isProfileOpen = false" class="absolute top-3 right-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-full transition-colors group" title="Close">
+                <X class="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
+              <div class="flex flex-col items-center text-center mt-2">
+                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-teal-500 mb-3 shadow-sm" />
+                <span class="text-[16px] font-bold text-slate-800 leading-tight">Dr. Sarah Jenkins</span>
+                <span class="text-[13px] text-teal-600 font-medium leading-tight mt-1">Chief Medical Officer</span>
+                <span class="text-[12px] text-slate-500 mt-1">sarah.jenkins@dmr.hospital</span>
+              </div>
+            </div>
+            <div class="p-2">
+              <router-link to="/settings" class="flex items-center justify-between px-4 py-2.5 text-[14px] font-medium text-slate-600 hover:bg-slate-50 hover:text-teal-600 rounded-xl transition-colors">
+                <div class="flex items-center gap-3">
+                  <User class="w-4 h-4" />
+                  <span>Edit Profile</span>
+                </div>
+                <Edit class="w-4 h-4" />
+              </router-link>
             </div>
           </div>
         </div>
@@ -226,7 +258,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../services/api'
-import { Activity, LayoutDashboard, Users, FileText, LogOut, TrendingUp, Stethoscope, Search, HeartPulse, LineChart, CalendarCheck, Apple, FilePlus, Check, Calendar, UserPlus } from 'lucide-vue-next'
+import { Activity, LayoutDashboard, Users, FileText, LogOut, TrendingUp, Stethoscope, Search, HeartPulse, LineChart, CalendarCheck, Apple, FilePlus, Check, Calendar, UserPlus, Settings, ChevronDown, X, User, Edit } from 'lucide-vue-next'
 
 import { Bar } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
@@ -307,6 +339,7 @@ const chartOptions = {
 
 const router = useRouter()
 const username = ref('User') 
+const isProfileOpen = ref(false)
 
 const userInitial = computed(() => {
   return username.value ? username.value.charAt(0).toUpperCase() : 'U'

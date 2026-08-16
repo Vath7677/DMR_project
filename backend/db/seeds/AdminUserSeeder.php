@@ -14,8 +14,7 @@ class AdminUserSeeder extends AbstractSeed {
                 'role'     => 'superadmin'
             ]
         ];
-
-        // បញ្ជាឲ្យ Phinx យកទិន្នន័យខាងលើ ទៅចាក់បញ្ចូលក្នុងតារាង users
+        
         $users = $this->table('users');
         $users->insert($data)
               ->saveData();
