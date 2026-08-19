@@ -14,21 +14,19 @@
       </div>
       
       <nav class="p-5 flex flex-col gap-1.5 flex-1">
-        <router-link to="/dashboard" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <LineChart class="w-5 h-5" />
-          <span>Dashboard</span>
-        </router-link>
-        <router-link to="/patients" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <Users class="w-5 h-5" />
-          <span>Manage Patients</span>
-        </router-link>
-        <router-link to="/health-records" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <FileText class="w-5 h-5" />
-          <span>Health Records</span>
-        </router-link>
-        <router-link to="/settings" class="flex items-center gap-3 px-4 py-3 bg-teal-600 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(13,148,136,0.2)]">
-          <Settings class="w-5 h-5" />
-          <span>Settings</span>
+        <router-link 
+          v-for="item in menuItems" 
+          :key="item.path" 
+          :to="item.path" 
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200"
+          :class="[
+            $route.path === item.path 
+              ? 'bg-teal-600 text-white font-semibold shadow-[0_0_20px_rgba(13,148,136,0.2)]' 
+              : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium'
+          ]"
+        >
+          <component :is="item.icon" class="w-5 h-5" />
+          <span>{{ item.name }}</span>
         </router-link>
       </nav>
 
@@ -259,6 +257,13 @@ const router = useRouter()
 const username = ref('User') 
 const activeTab = ref('profile')
 const isProfileOpen = ref(false)
+
+const menuItems = ref([
+  { name: 'Dashboard', path: '/dashboard', icon: LineChart },
+  { name: 'Manage Patients', path: '/patients', icon: Users },
+  { name: 'Health Records', path: '/health-records', icon: FileText },
+  { name: 'Settings', path: '/settings', icon: Settings }
+])
 
 onMounted(() => {
   const storedName = localStorage.getItem('username')

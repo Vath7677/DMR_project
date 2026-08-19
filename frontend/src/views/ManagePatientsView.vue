@@ -14,21 +14,19 @@
       </div>
       
       <nav class="p-5 flex flex-col gap-1.5 flex-1">
-        <router-link to="/dashboard" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <LineChart class="w-5 h-5" />
-          <span>Dashboard</span>
-        </router-link>
-        <router-link to="/patients" class="flex items-center gap-3 px-4 py-3 bg-teal-600 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(13,148,136,0.2)]">
-          <Users class="w-5 h-5" />
-          <span>Manage Patients</span>
-        </router-link>
-        <router-link to="/health-records" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <FileText class="w-5 h-5" />
-          <span>Health Records</span>
-        </router-link>
-        <router-link to="/settings" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <Settings class="w-5 h-5" />
-          <span>Settings</span>
+        <router-link 
+          v-for="item in menuItems" 
+          :key="item.path" 
+          :to="item.path" 
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200"
+          :class="[
+            $route.path === item.path 
+              ? 'bg-teal-600 text-white font-semibold shadow-[0_0_20px_rgba(13,148,136,0.2)]' 
+              : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium'
+          ]"
+        >
+          <component :is="item.icon" class="w-5 h-5" />
+          <span>{{ item.name }}</span>
         </router-link>
       </nav>
 
@@ -185,7 +183,10 @@
                       {{ patient.gender }}
                     </span>
                   </td>
-                  <td class="px-6 py-5 text-sm text-slate-600">{{ patient.phone }}</td>
+                  <td class="px-6 py-5 text-sm text-slate-600">
+                    <span v-if="patient.phone">{{ patient.phone }}</span>
+                    <span v-else class="text-slate-400 italic">Null</span>
+                  </td>
                   <td class="px-6 py-5 text-center">
                     <div class="flex items-center justify-center gap-2">
                       <button @click="openViewModal(patient)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100" title="View Details">
@@ -246,7 +247,9 @@
                     <Phone class="w-4 h-4" />
                   </div>
                   <div class="pt-1.5">
-                    <p class="text-[13px] font-medium text-slate-800">{{ viewingPatient?.phone || 'N/A' }}</p>
+                    <p class="text-[13px] font-medium" :class="viewingPatient?.phone ? 'text-slate-800' : 'text-slate-400 italic'">
+                      {{ viewingPatient?.phone || 'Null' }}
+                    </p>
                   </div>
                 </div>
                 <div class="flex items-start gap-3">
@@ -293,6 +296,12 @@
         <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
           <form @submit.prevent="savePatient" class="space-y-6">
             
+            <!-- Error Message -->
+            <div v-if="formError" class="bg-red-50 text-red-600 px-4 py-3 rounded-lg border border-red-100 flex items-start gap-3 animate-fade-in mb-4">
+              <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
+              <p class="text-[13px] font-medium leading-relaxed">{{ formError }}</p>
+            </div>
+
             <!-- Personal Info Section -->
             <div>
               <h3 class="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -302,11 +311,11 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1.5">
                   <label class="text-[13px] font-medium text-slate-700">First Name <span class="text-red-500">*</span></label>
-                  <input type="text" v-model="newPatient.firstName" @keydown.enter.prevent="lastNameInputRef?.focus()" required placeholder="e.g. John" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                  <input type="text" v-model="newPatient.firstName" @input="newPatient.firstName = capitalizeName(newPatient.firstName)" @keydown.enter.prevent="lastNameInputRef?.focus()" required placeholder="e.g. John" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                 </div>
                 <div class="space-y-1.5">
                   <label class="text-[13px] font-medium text-slate-700">Last Name <span class="text-red-500">*</span></label>
-                  <input type="text" ref="lastNameInputRef" v-model="newPatient.lastName" required placeholder="e.g. Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                  <input type="text" ref="lastNameInputRef" v-model="newPatient.lastName" @input="newPatient.lastName = capitalizeName(newPatient.lastName)" required placeholder="e.g. Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                 </div>
                 <div class="space-y-1.5 relative">
                   <label class="text-[13px] font-medium text-slate-700">Date of Birth <span class="text-red-500">*</span></label>
@@ -388,9 +397,8 @@
               </h3>
               <div class="grid grid-cols-1 gap-5">
                 <div class="space-y-1.5">
-                  <label class="text-[13px] font-medium text-slate-700">Phone Number <span class="text-red-500">*</span></label>
-                  <input type="tel" :value="newPatient.phone" @input="handlePhoneInput" required placeholder="e.g. 0123456789" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" :class="{'border-red-400 focus:border-red-500 bg-red-50/30': phoneError}" />
-                  <p v-if="phoneError" class="text-xs text-red-500 mt-1 flex items-center gap-1 animate-fade-in"><AlertCircle class="w-3.5 h-3.5" />{{ phoneError }}</p>
+                  <label class="text-[13px] font-medium text-slate-700">Phone Number</label>
+                  <input type="tel" v-model="newPatient.phone" placeholder="e.g. 0123456789" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                 </div>
                 <div class="space-y-1.5">
                   <label class="text-[13px] font-medium text-slate-700">Full Address</label>
@@ -425,6 +433,7 @@ import { Activity, LayoutDashboard, Users, FileText, LogOut, Search, HeartPulse,
 
 interface Patient {
   id: string;
+  db_id?: number; 
   initials: string;
   name: string;
   dob: string;
@@ -437,6 +446,13 @@ interface Patient {
 const router = useRouter()
 const username = ref('User') 
 const isProfileOpen = ref(false)
+
+const menuItems = ref([
+  { name: 'Dashboard', path: '/dashboard', icon: LineChart },
+  { name: 'Manage Patients', path: '/patients', icon: Users },
+  { name: 'Health Records', path: '/health-records', icon: FileText },
+  { name: 'Settings', path: '/settings', icon: Settings }
+])
 const isSortOpen = ref(false)
 const currentSort = ref('Newest')
 const isGenderOpen = ref(false)
@@ -536,31 +552,18 @@ const newPatient = ref({
   address: ''
 })
 
-const phoneError = ref('')
 
-const handlePhoneInput = (e: Event) => {
-  const target = e.target as HTMLInputElement;
-  const rawValue = target.value;
-  
-  if (/[^0-9]/.test(rawValue)) {
-    phoneError.value = 'Only numbers are allowed.';
-  } else if (rawValue.length > 10) {
-    phoneError.value = 'Maximum 10 digits allowed.';
-  } else {
-    phoneError.value = '';
-  }
-  
-  newPatient.value.phone = rawValue;
-}
+
+const formError = ref('')
 
 const openAddModal = () => {
   editingPatientId.value = null
+  formError.value = ''
   dobDay.value = ''
   dobMonth.value = ''
   dobYear.value = ''
   isDobOpen.value = false
   isModalGenderOpen.value = false
-  phoneError.value = ''
   newPatient.value = {
     firstName: '',
     lastName: '',
@@ -575,6 +578,7 @@ const openAddModal = () => {
 
 const openEditModal = (patient: any) => {
   editingPatientId.value = patient.id
+  formError.value = ''
   const parts = patient.name.split(' ')
   const firstName = parts[0]
   const lastName = parts.slice(1).join(' ')
@@ -592,7 +596,6 @@ const openEditModal = (patient: any) => {
     dobYear.value = ''
   }
   
-  phoneError.value = ''
   newPatient.value = {
     firstName,
     lastName,
@@ -605,13 +608,8 @@ const openEditModal = (patient: any) => {
   isAddModalOpen.value = true
 }
 
-const deletePatient = (id: string) => {
-  if (confirm('Are you sure you want to delete this patient?')) {
-    patients.value = patients.value.filter(p => p.id !== id)
-  }
-}
 
-// Initial mock data
+// State
 const patients = ref<Patient[]>([])
 
 // Format date from YYYY-MM-DD to DD-MM-YYYY
@@ -624,90 +622,127 @@ const formatDate = (dateString: string) => {
   return dateString
 }
 
-const savePatient = () => {
-  if (!newPatient.value.firstName || !newPatient.value.lastName) return
-  
-  if (phoneError.value) {
-    alert('Please fix the phone number error before saving!');
-    return
-  }
-
-  const initials = (newPatient.value.firstName.charAt(0) + newPatient.value.lastName.charAt(0)).toUpperCase()
-  const fullName = `${newPatient.value.firstName} ${newPatient.value.lastName}`
-
-  if (editingPatientId.value) {
-    // Update existing patient
-    const index = patients.value.findIndex(p => p.id === editingPatientId.value)
-    if (index !== -1) {
-      patients.value[index] = {
-        ...patients.value[index]!,
-        initials,
-        name: fullName,
-        dob: newPatient.value.dob,
-        gender: newPatient.value.gender,
-        phone: newPatient.value.phone,
-        email: newPatient.value.email,
-        address: newPatient.value.address
-      }
-    }
-  } else {
-    // Add new patient
-    let newIdNum = 1001
-    if (patients.value.length > 0) {
-      const maxId = Math.max(...patients.value.map(p => parseInt(p.id.split('-')[1] || '0')))
-      newIdNum = maxId + 1
-    }
-    
-    const newPatientObj = {
-      id: `P-${newIdNum}`,
-      initials: initials,
-      name: fullName,
-      dob: newPatient.value.dob,
-      gender: newPatient.value.gender,
-      phone: newPatient.value.phone,
-      email: newPatient.value.email,
-      address: newPatient.value.address
-    }
-    patients.value.unshift(newPatientObj)
-    
-    // Save to recent patients suggestion queue
-    try {
-      const recentStr = localStorage.getItem('recentPatients') || '[]'
-      const recent = JSON.parse(recentStr)
-      // Remove if already exists just in case
-      const filtered = recent.filter((r: any) => r.id !== newPatientObj.id)
-      filtered.push({ id: newPatientObj.id, name: newPatientObj.name, timestamp: Date.now() })
-      localStorage.setItem('recentPatients', JSON.stringify(filtered))
-    } catch (e) {
-      console.error('Failed to save recent patient', e)
-    }
-  }
-  
-  // Reset form
-  newPatient.value = {
-    firstName: '',
-    lastName: '',
-    dob: '',
-    gender: '',
-    phone: '',
-    email: '',
-    address: ''
-  }
-  
-  // Close modal
-  isAddModalOpen.value = false
-  isModalGenderOpen.value = false
+const capitalizeName = (val: string) => {
+  if (!val) return ''
+  return val.replace(/\b[a-z]/g, char => char.toUpperCase())
 }
 
 const userInitial = computed(() => {
   return username.value ? username.value.charAt(0).toUpperCase() : 'U'
 })
 
+const fetchPatients = async () => {
+  try {
+    const response = await api.get('/api/patients')
+    if (response && response.status === 'success') {
+      patients.value = response.data.map((p: any) => ({
+        id: p.patient_id, 
+        db_id: p.id,
+        initials: (p.first_name.charAt(0) + p.last_name.charAt(0)).toUpperCase() || 'P',
+        name: `${p.first_name} ${p.last_name}`,
+        dob: p.dob,
+        gender: p.gender,
+        phone: p.phone,
+        address: p.address
+      }))
+    }
+  } catch (error) {
+    console.error("Error fetching patients:", error)
+  }
+}
+
+const deletePatient = async (id: string) => {
+  if (confirm('Are you sure you want to delete this patient?')) {
+    const patientToDelete = patients.value.find(p => p.id === id);
+    if (patientToDelete && patientToDelete.db_id) {
+      try {
+        await api.delete(`/api/patients/${patientToDelete.db_id}`);
+        fetchPatients(); 
+      } catch (error) {
+        console.error("Delete failed", error);
+      }
+    }
+  }
+}
+
+
+const savePatient = async () => {
+  formError.value = ''
+  
+  if (!newPatient.value.firstName || 
+      !newPatient.value.lastName || 
+      !newPatient.value.dob || 
+      !newPatient.value.gender) {
+    formError.value = 'Please fill in all required fields (First Name, Last Name, Date of Birth, Gender) !'
+    return;
+  }
+
+  // Duplicate Check: Name + DOB + Gender
+  const fullName = `${newPatient.value.firstName} ${newPatient.value.lastName}`.trim().toLowerCase();
+  const inputDob = newPatient.value.dob;
+  const inputGender = newPatient.value.gender;
+
+  const isDuplicate = patients.value.some(p => {
+    if (editingPatientId.value && p.id === editingPatientId.value) return false;
+    return p.name.toLowerCase() === fullName && p.dob === inputDob && p.gender === inputGender;
+  });
+
+  if (isDuplicate) {
+    formError.value = 'This patient already exists (same Name, Date of Birth, and Gender). Duplicates are not allowed!';
+    return;
+  }
+
+  const payload = {
+    first_name: newPatient.value.firstName,
+    last_name: newPatient.value.lastName,
+    dob: newPatient.value.dob,
+    gender: newPatient.value.gender,
+    phone: newPatient.value.phone,
+    address: newPatient.value.address
+  };
+
+  try {
+    if (editingPatientId.value) {
+      const patientToEdit = patients.value.find(p => p.id === editingPatientId.value);
+      if (patientToEdit && patientToEdit.db_id) {
+        await api.put(`/api/patients/${patientToEdit.db_id}`, payload);
+      }
+    } else {
+      const response = await api.post('/api/patients', payload);
+      
+      // Save to recent patients suggestion queue (for Health Records 1-hour recommendation)
+      try {
+        if (response && response.status === 'success' && response.patient) {
+          const recentStr = localStorage.getItem('recentPatients') || '[]';
+          const recent = JSON.parse(recentStr);
+          const filtered = recent.filter((r: any) => r.id !== response.patient.id);
+          filtered.push({ 
+            id: response.patient.id, 
+            name: response.patient.name, 
+            timestamp: Date.now() 
+          });
+          localStorage.setItem('recentPatients', JSON.stringify(filtered));
+        }
+      } catch (e) {
+        console.error('Failed to save recent patient', e);
+      }
+    }
+    
+    isAddModalOpen.value = false;
+    isModalGenderOpen.value = false;
+    fetchPatients(); 
+    
+  } catch (error) {
+    console.error("Save failed", error);
+  }
+}
+
 onMounted(() => {
   const storedName = localStorage.getItem('username')
   if (storedName) {
     username.value = storedName
   }
+  fetchPatients()
 })
 
 const handleLogout = async () => {

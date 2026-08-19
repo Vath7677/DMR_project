@@ -150,11 +150,12 @@ const togglePassword = () => {
 };
 
 // the feature login use to connect by API to backend
+
 const handleLogin = async () => {
   try {
     const data = await api.post('/api/auth/login', {
-      email: email.value,
-      password: password.value
+        email: email.value,
+        password: password.value
     });
 
     if (data.status === 'error') {

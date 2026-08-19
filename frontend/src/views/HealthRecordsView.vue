@@ -14,21 +14,19 @@
       </div>
       
       <nav class="p-5 flex flex-col gap-1.5 flex-1">
-        <router-link to="/dashboard" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <LineChart class="w-5 h-5" />
-          <span>Dashboard</span>
-        </router-link>
-        <router-link to="/patients" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <Users class="w-5 h-5" />
-          <span>Manage Patients</span>
-        </router-link>
-        <router-link to="/health-records" class="flex items-center gap-3 px-4 py-3 bg-teal-600 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(13,148,136,0.2)]">
-          <FileText class="w-5 h-5" />
-          <span>Health Records</span>
-        </router-link>
-        <router-link to="/settings" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium text-sm transition-all duration-200">
-          <Settings class="w-5 h-5" />
-          <span>Settings</span>
+        <router-link 
+          v-for="item in menuItems" 
+          :key="item.path" 
+          :to="item.path" 
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200"
+          :class="[
+            $route.path === item.path 
+              ? 'bg-teal-600 text-white font-semibold shadow-[0_0_20px_rgba(13,148,136,0.2)]' 
+              : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium'
+          ]"
+        >
+          <component :is="item.icon" class="w-5 h-5" />
+          <span>{{ item.name }}</span>
         </router-link>
       </nav>
 
@@ -234,56 +232,96 @@
         <div v-if="isViewModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center">
           <div class="absolute inset-0 bg-slate-900/40" @click="isViewModalOpen = false"></div>
           
-          <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-scale-up mx-4">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <h3 class="text-lg font-bold text-slate-800">Health Record Details</h3>
+          <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up mx-4">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
+              <h3 class="text-lg font-bold text-slate-800">Patient Medical History</h3>
               <button @click="isViewModalOpen = false" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
                 <X class="w-5 h-5" />
               </button>
             </div>
             
-            <div class="p-6 overflow-y-auto custom-scrollbar">
-              <div class="flex items-center gap-4 mb-6">
-                <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shadow-sm shrink-0">
-                  <Activity class="w-6 h-6" />
+            <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50/30">
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shadow-sm shrink-0">
+                    <Activity class="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-bold text-slate-800">{{ viewingRecord?.patientName }}</h3>
+                    <p class="text-[13px] text-slate-500 font-medium mt-0.5">
+                      ID: {{ viewingRecord?.patientId }} &bull; {{ viewingRecord?.gender }} 
+                      <span v-if="viewingRecord?.dob">&bull; Born {{ viewingRecord?.dob }}</span>
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 class="text-lg font-bold text-slate-800">{{ viewingRecord?.patientName }}</h3>
-                  <p class="text-[13px] text-slate-500 font-medium mt-0.5">ID: {{ viewingRecord?.patientId }} &bull; {{ viewingRecord?.gender }}</p>
-                </div>
+                <button @click="openNewVisitFromHistory" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg transition-colors shadow-sm shadow-teal-200 flex items-center gap-2">
+                  <Plus class="w-4 h-4" /> Add New Record
+                </button>
               </div>
 
               <div class="space-y-4">
-                <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 grid grid-cols-2 gap-y-5 gap-x-4">
-                  <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date</p>
-                    <p class="text-[13px] font-medium text-slate-800">{{ viewingRecord?.date }}</p>
+                <div v-for="record in patientHistory" :key="record.id" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                  <div class="grid grid-cols-2">
+                    <!-- Date -->
+                    <div class="p-4 border-b border-r border-slate-100">
+                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date</p>
+                      <p class="text-[13px] font-bold text-slate-800">{{ record.date }}</p>
+                    </div>
+                    <!-- Record Type -->
+                    <div class="p-4 border-b border-slate-100 flex flex-col items-start">
+                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Record Type</p>
+                      <span :class="['px-2 py-0.5 rounded-full text-[11px] font-bold border inline-block', getBadgeClass(record.recordType)]">{{ record.recordType }}</span>
+                    </div>
+                    <!-- Blood Pressure -->
+                    <div class="p-4 border-b border-r border-slate-100">
+                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Blood Pressure</p>
+                      <p class="text-[13px] font-bold text-slate-800">
+                        {{ record.bloodPressure }} <span class="font-medium text-slate-500">mmHg</span>
+                      </p>
+                    </div>
+                    <!-- Pulse -->
+                    <div class="p-4 border-b border-slate-100">
+                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pulse</p>
+                      <p class="text-[13px] font-bold text-slate-800">
+                        {{ record.pulse }} <span class="font-medium text-slate-500">bpm</span>
+                      </p>
+                    </div>
+                    <!-- Weight / Height -->
+                    <div class="p-4 border-r border-slate-100">
+                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Weight / Height</p>
+                      <p class="text-[13px] font-bold text-slate-800">{{ record.weightHeight }}</p>
+                    </div>
+                    <!-- BMI -->
+                    <div class="p-4 flex flex-col items-start">
+                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">BMI</p>
+                      <span :class="['px-2 py-0.5 font-bold text-[11px] rounded inline-block', getBmiClass(record.bmi)]">{{ record.bmi }}</span>
+                    </div>
                   </div>
-                  <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Record Type</p>
-                    <span :class="['px-2 py-0.5 rounded-full text-[11px] font-bold border inline-block mt-0.5', getBadgeClass(viewingRecord?.recordType)]">{{ viewingRecord?.recordType }}</span>
-                  </div>
-                  <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Blood Pressure</p>
-                    <p class="text-[13px] font-medium text-slate-800">{{ viewingRecord?.bloodPressure }} mmHg</p>
-                  </div>
-                  <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pulse</p>
-                    <p class="text-[13px] font-medium text-slate-800">{{ viewingRecord?.pulse }} bpm</p>
-                  </div>
-                  <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Weight / Height</p>
-                    <p class="text-[13px] font-medium text-slate-800">{{ viewingRecord?.weightHeight }}</p>
-                  </div>
-                  <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">BMI</p>
-                    <span :class="['px-2 py-0.5 font-bold text-[11px] rounded inline-block mt-0.5', getBmiClass(viewingRecord?.bmi)]">{{ viewingRecord?.bmi }}</span>
-                  </div>
-                  <div class="col-span-2 pt-2 border-t border-slate-200">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Attending Doctor</p>
+                  <!-- Attending Doctor -->
+                  <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Attending Doctor</p>
                     <div class="flex items-center gap-2">
                       <User class="w-4 h-4 text-slate-400" />
-                      <p class="text-[13px] font-medium text-slate-800">{{ viewingRecord?.attendingDoctor }}</p>
+                      <p class="text-[13px] font-bold text-slate-800">{{ record.attendingDoctor }}</p>
+                    </div>
+                  </div>
+                  <!-- Note -->
+                  <div v-if="record.note" class="px-4 py-3 bg-white border-t border-slate-100">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Note / Information</p>
+                    <p class="text-[13px] text-slate-700 whitespace-pre-wrap">{{ record.note }}</p>
+                  </div>
+                  <!-- Attachment -->
+                  <div v-if="record.attachment_url && getAttachments(record.attachment_url).length > 0" class="px-4 py-3 bg-white border-t border-slate-100 flex flex-col justify-between">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Attachments</p>
+                    <div class="flex flex-wrap gap-3">
+                      <template v-for="(fileUrl, index) in getAttachments(record.attachment_url)" :key="index">
+                        <a v-if="isImage(fileUrl)" href="#" @click.prevent="openImagePreview('http://localhost/DMR_project/backend/public' + fileUrl)" class="block rounded-lg overflow-hidden border border-slate-200 shadow-sm hover:ring-2 hover:ring-teal-500 transition-all cursor-pointer">
+                          <img :src="'http://localhost/DMR_project/backend/public' + fileUrl" alt="Attachment" class="h-20 w-20 object-cover" />
+                        </a>
+                        <a v-else :href="'http://localhost/DMR_project/backend/public' + fileUrl" target="_blank" class="text-[12px] px-3 py-1.5 h-10 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md font-semibold flex items-center gap-1.5 transition-colors border border-blue-100">
+                          <FileText class="w-3.5 h-3.5" /> File {{ index + 1 }}
+                        </a>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -302,7 +340,7 @@
         <div v-if="isAddModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center">
           <div class="absolute inset-0 bg-slate-900/40" @click="isAddModalOpen = false"></div>
           
-          <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-scale-up">
+          <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up">
             <!-- Modal Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <h3 class="text-lg font-bold text-slate-800">{{ editingRecordId ? 'Edit Health Record' : 'Add New Health Record' }}</h3>
@@ -318,7 +356,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Patient Name <span class="text-rose-500">*</span></label>
-                    <input list="recent-patients" type="text" v-model="newRecord.patientName" @keydown.enter.prevent="bpInput?.focus()" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="recent-patients" type="text" v-model="newRecord.patientName" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="recent-patients">
                       <option v-for="p in recentPatients" :key="p.id" :value="p.name">{{ p.id }}</option>
                     </datalist>
@@ -334,10 +372,16 @@
                   <div class="space-y-1.5 relative">
                     <label class="text-[13px] font-medium text-slate-700">Record Type <span class="text-rose-500">*</span></label>
                     <div v-if="isTypeOpen" @click="isTypeOpen = false" class="fixed inset-0 z-40"></div>
-                    <button type="button" @click="isTypeOpen = !isTypeOpen" class="relative w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 transition-colors text-left flex items-center justify-between">
-                      <span :class="newRecord.recordType ? 'text-slate-800' : 'text-slate-400'">{{ newRecord.recordType || 'Select type' }}</span>
-                      <ChevronDown class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="{'rotate-180': isTypeOpen}" />
-                    </button>
+                    <div class="relative w-full flex items-center">
+                      <input 
+                        type="text" 
+                        v-model="newRecord.recordType" 
+                        @focus="isTypeOpen = true"
+                        placeholder="Select or type a record type..."
+                        class="w-full pl-3 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors"
+                      />
+                      <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isTypeOpen}" />
+                    </div>
                     <!-- Custom Dropdown Menu -->
                     <div v-if="isTypeOpen" class="absolute top-[62px] left-0 w-full bg-white border border-slate-100 rounded-lg shadow-xl z-50 py-1 animate-fade-in">
                       <button type="button" @click="newRecord.recordType = 'General Checkup'; isTypeOpen = false" class="w-full text-left px-3 py-2 text-[13px] hover:bg-slate-50 hover:text-teal-600 transition-colors">General Checkup</button>
@@ -401,7 +445,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Blood Pressure</label>
-                    <input list="bp-options" ref="bpInput" v-model="newRecord.bloodPressure" @keydown.enter.prevent="pulseInput?.focus()" placeholder="120/80" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="bp-options" ref="bpInput" v-model="newRecord.bloodPressure" placeholder="120/80" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="bp-options">
                       <option value="90/60"></option>
                       <option value="100/60"></option>
@@ -421,7 +465,7 @@
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Pulse (bpm)</label>
-                    <input list="pulse-options" ref="pulseInput" type="number" v-model="newRecord.pulse" @keydown.enter.prevent="weightInput?.focus()" placeholder="72" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="pulse-options" ref="pulseInput" type="number" v-model="newRecord.pulse" placeholder="72" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="pulse-options">
                       <option value="60"></option>
                       <option value="65"></option>
@@ -447,7 +491,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Weight (kg)</label>
-                    <input list="weight-options" type="number" ref="weightInput" step="0.1" v-model="newRecord.weight" @keydown.enter.prevent="heightInput?.focus()" placeholder="60" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="weight-options" type="number" ref="weightInput" step="0.1" v-model="newRecord.weight" placeholder="60" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="weight-options">
                       <option value="40"></option><option value="45"></option><option value="50"></option>
                       <option value="55"></option><option value="60"></option><option value="65"></option>
@@ -458,7 +502,7 @@
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Height (m)</label>
-                    <input list="height-options" type="number" ref="heightInput" step="0.01" v-model="newRecord.height" @keydown.enter.prevent="doctorInput?.focus()" placeholder="1.65" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="height-options" type="number" ref="heightInput" step="0.01" v-model="newRecord.height" placeholder="1.65" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="height-options">
                       <option value="1.40"></option><option value="1.45"></option><option value="1.50"></option>
                       <option value="1.55"></option><option value="1.60"></option><option value="1.65"></option>
@@ -481,6 +525,53 @@
                   </div>
                 </div>
 
+                <div class="space-y-1.5 mt-4">
+                  <label class="text-[13px] font-medium text-slate-700">Note / Additional Information</label>
+                  <textarea ref="noteInput" v-model="newRecord.note" @keydown.enter.exact.prevent="saveRecord" rows="3" placeholder="Add any clinical notes, symptoms, or observations here..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors resize-y"></textarea>
+                  <p class="text-[11px] text-slate-400">Press <kbd class="bg-slate-100 border border-slate-200 px-1 py-0.5 rounded text-[10px]">Enter</kbd> to save. Use <kbd class="bg-slate-100 border border-slate-200 px-1 py-0.5 rounded text-[10px]">Shift + Enter</kbd> for a new line.</p>
+                </div>
+
+                <div class="space-y-1.5 mt-4">
+                  <label class="text-[13px] font-medium text-slate-700">Attachment (Picture/PDF)</label>
+                  <div class="relative">
+                    <input type="file" ref="fileInput" id="file-upload" @change="handleFileUpload" accept="image/*,.pdf" multiple class="hidden" :disabled="existingAttachments.length >= 5" />
+                    <label for="file-upload" tabindex="0" @keydown.enter.prevent="fileInput?.click()" @keydown.space.prevent="fileInput?.click()" :class="['flex items-center justify-center px-4 py-3 text-[13px] font-medium rounded-lg transition-colors border border-dashed w-full group focus:outline-none focus:ring-2 focus:ring-teal-500', existingAttachments.length >= 5 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'cursor-pointer bg-slate-50 hover:bg-teal-50 text-slate-600 hover:text-teal-700 border-slate-200 hover:border-teal-300']">
+                      <FileText class="w-4 h-4 mr-2" :class="existingAttachments.length >= 5 ? 'text-slate-400' : 'text-slate-400 group-hover:text-teal-500'" /> 
+                      <span class="truncate max-w-[200px] sm:max-w-xs">
+                        {{ existingAttachments.length >= 5 ? 'Maximum 5 files reached' : (selectedFiles.length > 0 ? selectedFiles.length + ' file(s) selected' : 'Click to Upload up to ' + (5 - existingAttachments.length) + ' Files') }}
+                      </span>
+                    </label>
+                  </div>
+                  <!-- Show newly selected files before upload -->
+                  <div v-if="selectedFiles.length > 0" class="mt-3">
+                    <p class="text-[12px] font-medium text-slate-500 mb-2">Selected for Upload:</p>
+                    <div class="space-y-2">
+                      <div v-for="(file, index) in selectedFiles" :key="'new'+index" class="flex items-center justify-between p-2 bg-teal-50 border border-teal-100 rounded-lg">
+                        <span class="text-[12px] text-teal-700 truncate max-w-[250px]"><FileText class="w-3 h-3 inline mr-1" />{{ file.name }}</span>
+                        <button type="button" @click.prevent="removeSelectedFile(index)" class="text-teal-600 hover:text-rose-500 p-1 bg-white rounded-full shadow-sm">
+                          <X class="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Show existing attachments when editing -->
+                  <div v-if="editingRecordId && existingAttachments.length > 0" class="mt-3">
+                    <p class="text-[12px] font-medium text-slate-500 mb-2">Current Attachments:</p>
+                    <div class="flex flex-wrap gap-2">
+                      <div v-for="(fileUrl, index) in existingAttachments" :key="'old'+index" class="relative group">
+                        <a v-if="isImage(fileUrl)" href="#" @click.prevent="openImagePreview('http://localhost/DMR_project/backend/public' + fileUrl)" class="block rounded-md overflow-hidden border border-slate-200 shadow-sm transition-all cursor-pointer">
+                          <img :src="'http://localhost/DMR_project/backend/public' + fileUrl" alt="Attachment" class="h-12 w-12 object-cover" />
+                        </a>
+                        <a v-else :href="'http://localhost/DMR_project/backend/public' + fileUrl" target="_blank" class="text-[11px] px-2 py-1 bg-slate-100 text-blue-600 hover:bg-slate-200 rounded flex items-center h-12 gap-1 transition-colors">
+                          <FileText class="w-3 h-3" /> File {{ index + 1 }}
+                        </a>
+                        <button type="button" @click.prevent="removeExistingAttachment(index)" class="absolute -top-1.5 -right-1.5 bg-white text-slate-400 hover:text-rose-500 rounded-full border border-slate-200 p-0.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X class="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <!-- Footer -->
                 <div class="pt-6 border-t border-slate-100 flex items-center justify-end gap-3 mt-8">
                   <button type="button" @click="isAddModalOpen = false" class="px-5 py-2.5 text-[14px] font-semibold text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
@@ -494,20 +585,35 @@
             </div>
           </div>
         </div>
-      </main>
+      <!-- Image Preview Lightbox -->
+      <div v-if="isImagePreviewOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" @click="isImagePreviewOpen = false">
+        <div class="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center" @click.stop>
+          <div class="absolute -top-12 right-0 flex items-center gap-3">
+            <button type="button" @click.prevent="forceDownload(previewImageUrl)" class="text-white hover:text-teal-400 transition-colors bg-white/10 hover:bg-white/20 rounded-full p-2" title="Download Image">
+              <Download class="w-6 h-6" />
+            </button>
+            <button type="button" @click="isImagePreviewOpen = false" class="text-white hover:text-rose-400 transition-colors bg-white/10 hover:bg-white/20 rounded-full p-2" title="Close">
+              <X class="w-6 h-6" />
+            </button>
+          </div>
+          <img :src="previewImageUrl" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain ring-1 ring-white/20" alt="Preview" />
+        </div>
+      </div>
+    </main>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../services/api'
-import { Activity, LayoutDashboard, Users, FileText, LogOut, Plus, Trash2, Search, HeartPulse, LineChart, CalendarCheck, Apple, Settings, ChevronDown, X, User, Edit, Eye } from 'lucide-vue-next'
+import { Activity, LayoutDashboard, Users, FileText, LogOut, Plus, Trash2, Search, HeartPulse, LineChart, CalendarCheck, Apple, Settings, ChevronDown, X, User, Edit, Eye, Download } from 'lucide-vue-next'
 
 // TypeScript Interfaces for strict typing
 interface HealthRecord {
   id: string;
+  db_id?: number;
   date: string;
   patientName: string;
   patientId: string;
@@ -517,8 +623,13 @@ interface HealthRecord {
   bloodPressure: string;
   pulse: string;
   weightHeight: string;
+  weight?: string | number;
+  height?: string | number;
   bmi: string;
   attendingDoctor: string;
+  note?: string;
+  dob?: string;
+  attachment_url?: string;
 }
 
 interface HealthRecordForm extends Omit<HealthRecord, 'id'> {
@@ -529,6 +640,13 @@ interface HealthRecordForm extends Omit<HealthRecord, 'id'> {
 const router = useRouter()
 const username = ref('User') 
 const isProfileOpen = ref(false)
+
+const menuItems = ref([
+  { name: 'Dashboard', path: '/dashboard', icon: LineChart },
+  { name: 'Manage Patients', path: '/patients', icon: Users },
+  { name: 'Health Records', path: '/health-records', icon: FileText },
+  { name: 'Settings', path: '/settings', icon: Settings }
+])
 
 // Dropdown state
 const isGenderOpen = ref(false)
@@ -544,8 +662,90 @@ const searchQuery = ref('')
 // Modal states
 const isAddModalOpen = ref(false)
 const isViewModalOpen = ref(false)
+const isImagePreviewOpen = ref(false)
+const previewImageUrl = ref('')
 const viewingRecord = ref<HealthRecord | null>(null)
 const editingRecordId = ref<string | null>(null)
+
+const openImagePreview = (url: string) => {
+  previewImageUrl.value = url
+  isImagePreviewOpen.value = true
+}
+
+const forceDownload = async (url: string) => {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error('Network response was not ok')
+    const blob = await response.blob()
+    const blobUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = blobUrl
+    const filename = url.split('/').pop() || 'download'
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(blobUrl)
+  } catch (error) {
+    console.error("Download failed, opening in new tab", error)
+    window.open(url, '_blank')
+  }
+}
+
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if (isImagePreviewOpen.value && e.key === 'Enter') {
+    e.preventDefault()
+    forceDownload(previewImageUrl.value)
+  } else if (isImagePreviewOpen.value && e.key === 'Escape') {
+    isImagePreviewOpen.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown)
+})
+
+const patientHistory = computed(() => {
+  if (!viewingRecord.value) return []
+  return records.value.filter(r => r.patientId === viewingRecord.value?.patientId)
+})
+
+const openNewVisitFromHistory = () => {
+  if (!viewingRecord.value) return;
+  const record = viewingRecord.value;
+  
+  editingRecordId.value = null;
+  selectedFiles.value = []
+  
+  const now = new Date();
+  recYear.value = now.getFullYear().toString();
+  recMonth.value = (now.getMonth() + 1).toString().padStart(2, '0');
+  recDay.value = now.getDate().toString();
+  
+  newRecord.value = {
+    date: now.toISOString().split('T')[0] || '',
+    patientName: record.patientName,
+    patientId: record.patientId,
+    gender: record.gender,
+    status: record.status,
+    recordType: '',
+    bloodPressure: '',
+    pulse: '',
+    weightHeight: '',
+    bmi: '',
+    attendingDoctor: record.attendingDoctor,
+    note: record.note || '',
+    weight: '',
+    height: ''
+  };
+  
+  isViewModalOpen.value = false;
+  isAddModalOpen.value = true;
+}
 
 const openViewModal = (record: HealthRecord) => {
   viewingRecord.value = record
@@ -560,6 +760,8 @@ const pulseInput = ref<HTMLInputElement | null>(null)
 const weightInput = ref<HTMLInputElement | null>(null)
 const heightInput = ref<HTMLInputElement | null>(null)
 const doctorInput = ref<HTMLInputElement | null>(null)
+const noteInput = ref<HTMLTextAreaElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const recDay = ref<string | number>('')
 const recMonth = ref('')
@@ -607,9 +809,8 @@ const loadRecentPatients = () => {
 
 onMounted(() => {
   loadRecentPatients()
+  fetchRecords()
 })
-
-
 
 // Form state
 const newRecord = ref<HealthRecordForm>({
@@ -618,12 +819,13 @@ const newRecord = ref<HealthRecordForm>({
   patientId: '',
   gender: 'Male',
   status: 'Active',
-  recordType: 'General Checkup',
+  recordType: '',
   bloodPressure: '',
   pulse: '',
   weightHeight: '',
   bmi: '',
   attendingDoctor: '',
+  note: '',
   weight: '',
   height: ''
 })
@@ -658,14 +860,8 @@ watch([() => newRecord.value.weight, () => newRecord.value.height], ([w, h]) => 
   }
 })
 
-// Mock Data
-const records = ref<HealthRecord[]>([
-  // { id: 'HR-1005', date: '2026-08-12', patientName: 'Amara Okonkwo', patientId: 'P-1005', gender: 'Female', status: 'Active', recordType: 'Lab Results', bloodPressure: '118/78', pulse: '74', weightHeight: '58 kg / 1.62 m', bmi: '22.1', attendingDoctor: 'Dr. Sarah Jenkins' },
-  // { id: 'HR-1004', date: '2026-08-08', patientName: 'James Wilson', patientId: 'P-1004', gender: 'Male', status: 'Active', recordType: 'Endocrinology Follow-up', bloodPressure: '128/82', pulse: '76', weightHeight: '91.2 kg / 1.75 m', bmi: '29.8', attendingDoctor: 'Dr. Emily Carter' },
-  // { id: 'HR-1003', date: '2026-08-09', patientName: 'Sophia Chen', patientId: 'P-1003', gender: 'Female', status: 'Active', recordType: 'Routine Exam', bloodPressure: '115/75', pulse: '68', weightHeight: '55 kg / 1.65 m', bmi: '20.2', attendingDoctor: 'Dr. Sarah Jenkins' },
-  // { id: 'HR-1002', date: '2026-08-11', patientName: 'Marcus Aurelius', patientId: 'P-1002', gender: 'Male', status: 'Inactive', recordType: 'Cardiology Evaluation', bloodPressure: '135/88', pulse: '81', weightHeight: '84 kg / 1.78 m', bmi: '26.5', attendingDoctor: 'Dr. Robert Miller' },
-  // { id: 'HR-1001', date: '2026-08-10', patientName: 'Eleanor Vance', patientId: 'P-1001', gender: 'Female', status: 'Active', recordType: 'General Checkup', bloodPressure: '120/80', pulse: '72', weightHeight: '62.5 kg / 1.68 m', bmi: '22.1', attendingDoctor: 'Dr. Sarah Jenkins' }
-])
+// State
+const records = ref<HealthRecord[]>([])
 
 const filteredRecords = computed(() => {
   let result = [...records.value]
@@ -728,31 +924,48 @@ const getBmiClass = (bmiStr: string) => {
   return 'bg-red-100 text-red-700'
 }
 
+const getAttachments = (attachmentUrl?: string) => {
+  if (!attachmentUrl) return [];
+  try {
+    const parsed = JSON.parse(attachmentUrl);
+    return Array.isArray(parsed) ? parsed : [attachmentUrl];
+  } catch (e) {
+    return [attachmentUrl]; // old format fallback
+  }
+}
+
+const isImage = (url: string) => {
+  return url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
+}
+
 // Modal Actions
 const openAddModal = () => {
   editingRecordId.value = null
+  selectedFiles.value = []
   loadRecentPatients() // Refresh list on open
   
   isTypeOpen.value = false
   isDateOpen.value = false
   
   const today = new Date()
-  recYear.value = today.getFullYear()
-  recMonth.value = (today.getMonth() + 1).toString().padStart(2, '0')
-  recDay.value = today.getDate()
+  const now = new Date()
+  recYear.value = now.getFullYear().toString()
+  recMonth.value = (now.getMonth() + 1).toString().padStart(2, '0')
+  recDay.value = now.getDate().toString()
 
   newRecord.value = {
-    date: new Date().toISOString().split('T')[0] || '',
+    date: now.toISOString().split('T')[0] || '',
     patientName: '',
     patientId: '',
     gender: 'Male',
     status: 'Active',
-    recordType: 'General Checkup',
+    recordType: '',
     bloodPressure: '',
     pulse: '',
     weightHeight: '',
     bmi: '',
     attendingDoctor: 'Dr. Sarah Jenkins',
+    note: '',
     weight: '',
     height: ''
   }
@@ -761,6 +974,8 @@ const openAddModal = () => {
 
 const openEditModal = (record: HealthRecord) => {
   editingRecordId.value = record.id
+  selectedFiles.value = []
+  existingAttachments.value = getAttachments(record.attachment_url)
   
   if (record.date) {
     const dParts = record.date.split('-')
@@ -784,63 +999,138 @@ const openEditModal = (record: HealthRecord) => {
     }
   }
   
-  newRecord.value = { ...record, weight: w, height: h }
+  newRecord.value = { 
+    ...record, 
+    weight: record.weight !== undefined ? record.weight : w, 
+    height: record.height !== undefined ? record.height : h 
+  }
   isAddModalOpen.value = true
 }
 
-const deleteRecord = (id: string) => {
-  if (confirm('Are you sure you want to delete this health record?')) {
-    records.value = records.value.filter(r => r.id !== id)
+const fetchRecords = async () => {
+  try {
+    const response = await api.get('/api/health-records')
+    if (response && response.status === 'success') {
+      records.value = response.data.map((r: any) => ({
+        id: r.record_id,
+        db_id: r.id,
+        date: r.date,
+        patientName: r.patient_name,
+        patientId: r.patient_id || '',
+        gender: r.gender || 'Other',
+        status: r.status || 'Active',
+        recordType: r.record_type,
+        bloodPressure: r.blood_pressure || '',
+        pulse: r.pulse || '',
+        weightHeight: (r.weight && r.height) ? `${r.weight} kg / ${r.height} m` : '',
+        weight: r.weight,
+        height: r.height,
+        bmi: r.bmi || '',
+        attendingDoctor: r.attending_doctor || '',
+        dob: r.dob || '',
+        note: r.note || '',
+        attachment_url: r.attachment_url || ''
+      }))
+    }
+  } catch (error) {
+    console.error("Failed to fetch records:", error)
   }
 }
 
-const saveRecord = () => {
+const deleteRecord = async (id: string) => {
+  if (confirm('Are you sure you want to delete this health record?')) {
+    const recordToDelete = records.value.find(r => r.id === id);
+    if (recordToDelete && recordToDelete.db_id) {
+      try {
+        await api.delete(`/api/health-records/${recordToDelete.db_id}`);
+        fetchRecords(); // refresh the list
+      } catch (error) {
+        console.error("Delete failed", error);
+      }
+    }
+  }
+}
+
+const selectedFiles = ref<File[]>([])
+const existingAttachments = ref<string[]>([])
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files) {
+    const maxAllowed = 5 - existingAttachments.value.length
+    
+    if (target.files.length > maxAllowed) {
+      alert(`Maximum 5 files allowed per record! You can only add ${maxAllowed} more file(s).`)
+      target.value = '' // Reset input
+      return
+    }
+    
+    selectedFiles.value = Array.from(target.files)
+  } else {
+    selectedFiles.value = []
+  }
+}
+
+const removeSelectedFile = (index: number) => {
+  selectedFiles.value.splice(index, 1)
+}
+
+const removeExistingAttachment = (index: number) => {
+  existingAttachments.value.splice(index, 1)
+}
+
+const saveRecord = async () => {
   if (!newRecord.value.patientName) return
 
-  const patientId = newRecord.value.patientId || `P-${Math.floor(1000 + Math.random() * 9000)}`
+  const payload = new FormData()
+  payload.append('patient_name', newRecord.value.patientName)
+  payload.append('patient_id', newRecord.value.patientId)
+  payload.append('gender', newRecord.value.gender)
+  payload.append('status', newRecord.value.status)
+  payload.append('record_type', newRecord.value.recordType)
+  payload.append('date', newRecord.value.date)
+  payload.append('blood_pressure', newRecord.value.bloodPressure)
+  payload.append('pulse', newRecord.value.pulse)
+  payload.append('weight', newRecord.value.weight?.toString() || '')
+  payload.append('height', newRecord.value.height?.toString() || '')
+  payload.append('bmi', newRecord.value.bmi)
+  payload.append('attending_doctor', newRecord.value.attendingDoctor)
+  payload.append('note', newRecord.value.note || '')
   
-  let newIdNum = 1001
-  if (!editingRecordId.value && records.value.length > 0) {
-    const maxId = Math.max(...records.value.map(r => parseInt(r.id.split('-')[1] || '0')))
-    newIdNum = maxId + 1
-  }
-
-  const recordToSave: HealthRecord = {
-    id: editingRecordId.value || `HR-${newIdNum}`,
-    date: newRecord.value.date,
-    patientName: newRecord.value.patientName,
-    patientId: patientId,
-    gender: newRecord.value.gender,
-    status: newRecord.value.status,
-    recordType: newRecord.value.recordType,
-    bloodPressure: newRecord.value.bloodPressure,
-    pulse: newRecord.value.pulse.toString(),
-    weightHeight: newRecord.value.weight && newRecord.value.height ? `${newRecord.value.weight} kg / ${newRecord.value.height} m` : newRecord.value.weightHeight,
-    bmi: newRecord.value.bmi.toString(),
-    attendingDoctor: newRecord.value.attendingDoctor
-  }
-
   if (editingRecordId.value) {
-    const index = records.value.findIndex(r => r.id === editingRecordId.value)
-    if (index !== -1) {
-      records.value[index] = recordToSave
-    }
-  } else {
-    records.value.unshift(recordToSave)
-    
-    // Remove from recent patients suggestions once a record is added
-    try {
-      const stored = localStorage.getItem('recentPatients')
-      if (stored) {
-        const parsed = JSON.parse(stored) as RecentPatient[]
-        const updated = parsed.filter(p => p.id !== patientId)
-        localStorage.setItem('recentPatients', JSON.stringify(updated))
-        loadRecentPatients()
-      }
-    } catch (e) {}
+    payload.append('existing_attachments', JSON.stringify(existingAttachments.value))
   }
+  
+  selectedFiles.value.forEach((file) => {
+    payload.append('attachments[]', file)
+  })
 
-  isAddModalOpen.value = false
+  try {
+    if (editingRecordId.value) {
+      const recordToEdit = records.value.find(r => r.id === editingRecordId.value);
+      if (recordToEdit && recordToEdit.db_id) {
+        await api.postFormData(`/api/health-records/${recordToEdit.db_id}`, payload);
+      }
+    } else {
+      await api.postFormData('/api/health-records', payload);
+      
+      // Remove from recent patients suggestions once a record is added
+      try {
+        const stored = localStorage.getItem('recentPatients')
+        if (stored) {
+          const parsed = JSON.parse(stored) as RecentPatient[]
+          const updated = parsed.filter(p => p.id !== newRecord.value.patientId)
+          localStorage.setItem('recentPatients', JSON.stringify(updated))
+          loadRecentPatients()
+        }
+      } catch (e) {}
+    }
+    
+    isAddModalOpen.value = false;
+    fetchRecords(); // Refresh the list from the database
+  } catch (error) {
+    console.error("Save failed", error);
+  }
 }
 
 const userInitial = computed(() => {

@@ -10,7 +10,7 @@ class AuthController {
         if (isset($_SESSION['locked_until']) && $_SESSION['locked_until'] > time()) {
             $remaining_time = $_SESSION['locked_until'] - time();
             echo json_encode(['status' => 'locked', 'message' => "Too many failed attempts. Please wait $remaining_time seconds.", 'remaining_time' => $remaining_time]);
-            exit();
+            return;
         }
 
         if (isset($_SESSION['locked_until']) && $_SESSION['locked_until'] <= time()) {
@@ -28,18 +28,17 @@ class AuthController {
 
             // call the User Model
             require_once __DIR__ . '/User.php';
-
-
+            
             // Find the user by email using Eloquent ORM
             $user = User::where('email', $email)->first();
 
             if (!$user) {
                 echo json_encode(['status' => 'error', 'message' => "Email not found!"]);
-                exit();
+                return;
             }
-                        if ($user->password !== $password) {
+            if ($user->password !== $password) {
                 echo json_encode(['status' => 'error', 'message' => "Password mismatch!"]);
-                exit();
+                return;
             }
 
             $_SESSION['failed_attempts'] = 0;
