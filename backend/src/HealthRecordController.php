@@ -33,10 +33,13 @@ class HealthRecordController {
 
         // Handle File Uploads
         $attachmentUrls = [];
-        $uploadDir = __DIR__ . '/../public/uploads/';
+
+        $uploadDir = __DIR__ . "/../public/uploads/";
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
+
+
 
         // Handle multiple files
         if (isset($_FILES['attachments'])) {
@@ -121,6 +124,20 @@ class HealthRecordController {
             mkdir($uploadDir, 0777, true);
         }
 
+        // Delete orphaned files (removed from UI)
+        $oldAttachments = $record->attachment_url ? json_decode($record->attachment_url, true) : [];
+        if (is_array($oldAttachments)) {
+            foreach ($oldAttachments as $oldFile) {
+                if (!in_array($oldFile, $attachmentUrls)) {
+                    // File was deleted from UI
+                    $filePath = __DIR__ . '/../public' . $oldFile;
+                    if (file_exists($filePath) && is_file($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+            }
+        }
+
         // Handle multiple files
         if (isset($_FILES['attachments'])) {
             $files = $_FILES['attachments'];
@@ -164,12 +181,22 @@ class HealthRecordController {
 
         echo json_encode(["status" => "success", "message" => "Record updated successfully!"]);
     }
-
     // DELETE a record
     public function deleteRecord($id) {
-        require_once __DIR__ . '/HealthRecord.php';
+        require_once __DIR__ . "/HealthRecord.php";
         $record = HealthRecord::find($id);
         if ($record) {
+            // Delete associated physical files
+            $attachments = $record->attachment_url ? json_decode($record->attachment_url, true) : [];
+            if (is_array($attachments)) {
+                foreach ($attachments as $fileUrl) {
+                    $filePath = __DIR__ . "/../public" . $fileUrl;
+                    if (file_exists($filePath) && is_file($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+            }
+            
             $record->delete();
         }
         echo json_encode(["status" => "success", "message" => "Record deleted successfully!"]);
