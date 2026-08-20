@@ -29,5 +29,5 @@ RUN chown -R www-data:www-data /var/www/html/DMR_project/backend
 
 EXPOSE 80
 
-# Command to run migrations and start Apache
-CMD php vendor/bin/phinx migrate -e production && apache2-foreground
+# Command to start Apache (Migration is bypassed as it's already done)
+CMD ["apache2-foreground"]
