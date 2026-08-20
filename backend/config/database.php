@@ -11,10 +11,10 @@ $capsule = new Capsule;
 
 $capsule->addConnection([
     'driver'    => 'mysql',
-    'host'      => 'db',
-    'database'  => 'dmr_db',
-    'username'  => 'root',
-    'password'  => '2408',
+    'host'      => getenv('DB_HOST') ?: '127.0.0.1',
+    'database'  => getenv('DB_DATABASE') ?: 'dmr_db',
+    'username'  => getenv('DB_USERNAME') ?: 'root',
+    'password'  => getenv('DB_PASSWORD') ?: '2408',
     'charset'   => 'utf8mb4',
     'collation' => 'utf8mb4_unicode_ci',
     'prefix'    => '',

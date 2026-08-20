@@ -1,6 +1,6 @@
 // frontend/src/services/api.ts
 
-const API_BASE_URL = 'http://localhost/DMR_project/backend/public';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/DMR_project/backend/public';
 
 export const api = {
   async get(endpoint: string) {
