@@ -1,5 +1,11 @@
 <?php
 
+$dbHost = getenv('DB_HOST') ?: 'db';
+$dbName = getenv('DB_DATABASE') ?: 'dmr_db';
+$dbUser = getenv('DB_USERNAME') ?: 'root';
+$dbPass = getenv('DB_PASSWORD') ?: '2408';
+$dbPort = getenv('DB_PORT') ?: '3306';
+
 return
     [
         'paths' => [
@@ -12,12 +18,22 @@ return
 
             'development' => [
                 'adapter' => 'mysql',
-                'host' => 'db',
-                'name' => 'dmr_db',
-                'user' => 'root',
-                'pass' => '2408',
-                'port' => '3306',
+                'host' => $dbHost,
+                'name' => $dbName,
+                'user' => $dbUser,
+                'pass' => $dbPass,
+                'port' => $dbPort,
                 'charset' => 'utf8',
+            ],
+            'production' => [
+                'adapter' => 'mysql',
+                'host' => $dbHost,
+                'name' => $dbName,
+                'user' => $dbUser,
+                'pass' => $dbPass,
+                'port' => $dbPort,
+                'charset' => 'utf8',
+                'mysql_attr_ssl_verify_server_cert' => false,
             ]
         ],
         'version_order' => 'creation'
