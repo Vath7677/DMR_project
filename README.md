@@ -6,8 +6,6 @@ A comprehensive, secure, and modern healthcare management dashboard designed to 
 - **🔐 Secure Authentication:** Encrypted passwords (Bcrypt) and secure session management.
 - **👥 Patient Management:** Complete CRUD operations for patient profiles and demographics.
 - **📂 Health Records:** Track diagnoses, treatments, vitals (BMI, Blood Pressure), and upload medical attachments.
-- **📅 Appointments:** Schedule and manage doctor-patient appointments.
-- **🥗 Diet & Exercise Plans:** Create, view, and print customized health plans for patients.
 - **📊 Interactive Dashboard:** Visual statistics and real-time data using Chart.js.
 
 ## 💻 Technologies Used
