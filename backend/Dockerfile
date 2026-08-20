@@ -18,14 +18,15 @@ WORKDIR /var/www/html/DMR_project/backend
 # Copy the backend code into the container
 COPY . /var/www/html/DMR_project/backend/
 
-# Change Apache document root so it points to the correct location
-# Slim's index.php is at backend/public/index.php
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
+
+# Change Apache document root
 RUN sed -i 's!/var/www/html!/var/www/html/DMR_project/backend/public!g' /etc/apache2/sites-available/000-default.conf
 
 # Give permissions
 RUN chown -R www-data:www-data /var/www/html/DMR_project/backend
 
-# Expose port 80
 EXPOSE 80
 
 # Command to run migrations and start Apache
