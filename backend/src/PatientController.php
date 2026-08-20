@@ -13,6 +13,13 @@ class PatientController {
     public function createPatient() {
         require_once __DIR__ . '/Patient.php';
         $data = json_decode(file_get_contents('php://input'), true);
+        
+        // 🛡️ SECURITY (OWASP A03/XSS): Sanitize inputs (Strip HTML tags)
+        if (is_array($data)) {
+            array_walk_recursive($data, function(&$item) {
+                if (is_string($item)) $item = strip_tags($item);
+            });
+        }
 
         $lastPatient = Patient::orderBy('id', 'desc')->first();
         $nextId = 1001;
@@ -45,6 +52,13 @@ class PatientController {
     public function updatePatient($id) {
         require_once __DIR__ . '/Patient.php';
         $data = json_decode(file_get_contents('php://input'), true);
+        
+        // 🛡️ SECURITY (OWASP A03/XSS): Sanitize inputs (Strip HTML tags)
+        if (is_array($data)) {
+            array_walk_recursive($data, function(&$item) {
+                if (is_string($item)) $item = strip_tags($item);
+            });
+        }
 
         $patient = Patient::find($id);
         if (!$patient) {

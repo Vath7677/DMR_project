@@ -31,6 +31,13 @@ class HealthRecordController {
             $data = $_POST;
         }
 
+        // 🛡️ SECURITY (OWASP A03/XSS): Sanitize inputs (Strip HTML tags)
+        if (is_array($data)) {
+            array_walk_recursive($data, function(&$item) {
+                if (is_string($item)) $item = strip_tags($item);
+            });
+        }
+
         // Handle File Uploads
         $attachmentUrls = [];
 
@@ -47,6 +54,9 @@ class HealthRecordController {
             if (is_array($files['name'])) {
                 for ($i = 0; $i < count($files['name']); $i++) {
                     if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                        $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt'];
+                        if (!in_array($ext, $allowed)) continue;
                         $filename = uniqid() . '_' . basename($files['name'][$i]);
                         if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $filename)) {
                             $attachmentUrls[] = '/uploads/' . $filename;
@@ -58,9 +68,13 @@ class HealthRecordController {
         
         // Handle single file fallback
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt'];
+            if (in_array($ext, $allowed)) {
             $filename = uniqid() . '_' . basename($_FILES['attachment']['name']);
             if (move_uploaded_file($_FILES['attachment']['tmp_name'], $uploadDir . $filename)) {
                 $attachmentUrls[] = '/uploads/' . $filename;
+            }
             }
         }
 
@@ -144,6 +158,9 @@ class HealthRecordController {
             if (is_array($files['name'])) {
                 for ($i = 0; $i < count($files['name']); $i++) {
                     if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                        $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt'];
+                        if (!in_array($ext, $allowed)) continue;
                         $filename = uniqid() . '_' . basename($files['name'][$i]);
                         if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $filename)) {
                             $attachmentUrls[] = '/uploads/' . $filename;
@@ -155,9 +172,13 @@ class HealthRecordController {
         
         // Handle single file fallback
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt'];
+            if (in_array($ext, $allowed)) {
             $filename = uniqid() . '_' . basename($_FILES['attachment']['name']);
             if (move_uploaded_file($_FILES['attachment']['tmp_name'], $uploadDir . $filename)) {
                 $attachmentUrls[] = '/uploads/' . $filename;
+            }
             }
         }
 

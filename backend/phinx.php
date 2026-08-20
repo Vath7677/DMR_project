@@ -12,10 +12,10 @@ return
 
             'development' => [
                 'adapter' => 'mysql',
-                'host' => '127.0.0.1',
+                'host' => 'db',
                 'name' => 'dmr_db',
                 'user' => 'root',
-                'pass' => '',
+                'pass' => '2408',
                 'port' => '3306',
                 'charset' => 'utf8',
             ]

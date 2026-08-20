@@ -36,12 +36,17 @@ class AuthController {
                 echo json_encode(['status' => 'error', 'message' => "Email not found!"]);
                 return;
             }
-            if ($user->password !== $password) {
+            if (!password_verify($password, $user->password)) {
                 echo json_encode(['status' => 'error', 'message' => "Password mismatch!"]);
                 return;
             }
 
             $_SESSION['failed_attempts'] = 0;
+            // 🔑 SET THE SESSION VARIABLES (The Key!)
+            $_SESSION['user_id'] = $user->id;
+            $_SESSION['username'] = $user->username;
+            $_SESSION['role'] = $user->role;
+
             echo json_encode(['status' => 'success', 'message' => 'Login successful!', 'role' => $user->role, 'username' => $user->username]);
         }
     }

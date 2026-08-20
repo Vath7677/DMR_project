@@ -22,9 +22,7 @@
           :class="[
             $route.path === item.path 
               ? 'bg-teal-600 text-white font-semibold shadow-[0_0_20px_rgba(13,148,136,0.2)]' 
-              : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium'
-          ]"
-        >
+              : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium']">
           <component :is="item.icon" class="w-5 h-5" />
           <span>{{ item.name }}</span>
         </router-link>
@@ -351,12 +349,12 @@
             
             <!-- Modal Body -->
             <div class="p-6 overflow-y-auto">
-              <form @submit.prevent="saveRecord" class="space-y-6">
+              <form ref="recordForm" @submit.prevent="saveRecord" class="space-y-6">
                 <!-- Patient Info -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Patient Name <span class="text-rose-500">*</span></label>
-                    <input list="recent-patients" type="text" v-model="newRecord.patientName" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="recent-patients" type="text" v-model="newRecord.patientName"  @keydown.enter.prevent="recordForm?.requestSubmit()" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="recent-patients">
                       <option v-for="p in recentPatients" :key="p.id" :value="p.name">{{ p.id }}</option>
                     </datalist>
@@ -375,7 +373,7 @@
                     <div class="relative w-full flex items-center">
                       <input 
                         type="text" 
-                        v-model="newRecord.recordType" 
+                        v-model="newRecord.recordType"  
                         @focus="isTypeOpen = true"
                         placeholder="Select or type a record type..."
                         class="w-full pl-3 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors"
@@ -445,7 +443,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Blood Pressure</label>
-                    <input list="bp-options" ref="bpInput" v-model="newRecord.bloodPressure" placeholder="120/80" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="bp-options" ref="bpInput" v-model="newRecord.bloodPressure" @keydown.enter.prevent="recordForm?.requestSubmit()" placeholder="120/80" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="bp-options">
                       <option value="90/60"></option>
                       <option value="100/60"></option>
@@ -465,7 +463,7 @@
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Pulse (bpm)</label>
-                    <input list="pulse-options" ref="pulseInput" type="number" v-model="newRecord.pulse" placeholder="72" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="pulse-options" ref="pulseInput" type="number" v-model="newRecord.pulse" @keydown.enter.prevent="recordForm?.requestSubmit()" placeholder="72" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="pulse-options">
                       <option value="60"></option>
                       <option value="65"></option>
@@ -491,7 +489,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Weight (kg)</label>
-                    <input list="weight-options" type="number" ref="weightInput" step="0.1" v-model="newRecord.weight" placeholder="60" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="weight-options" type="number" ref="weightInput" step="0.1" v-model="newRecord.weight" @keydown.enter.prevent="recordForm?.requestSubmit()" placeholder="60" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="weight-options">
                       <option value="40"></option><option value="45"></option><option value="50"></option>
                       <option value="55"></option><option value="60"></option><option value="65"></option>
@@ -502,7 +500,7 @@
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Height (m)</label>
-                    <input list="height-options" type="number" ref="heightInput" step="0.01" v-model="newRecord.height" placeholder="1.65" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="height-options" type="number" ref="heightInput" step="0.01" v-model="newRecord.height" @keydown.enter.prevent="recordForm?.requestSubmit()" placeholder="1.65" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="height-options">
                       <option value="1.40"></option><option value="1.45"></option><option value="1.50"></option>
                       <option value="1.55"></option><option value="1.60"></option><option value="1.65"></option>
@@ -512,7 +510,7 @@
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Attending Doctor</label>
-                    <input list="doctor-options" ref="doctorInput" type="text" v-model="newRecord.attendingDoctor" placeholder="Dr. Name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="doctor-options" ref="doctorInput" type="text" v-model="newRecord.attendingDoctor"  @keydown.enter.prevent="recordForm?.requestSubmit()" placeholder="Dr. Name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="doctor-options">
                       <option value="Dr. Sarah Jenkins"></option>
                       <option value="Dr. James Wilson"></option>
@@ -527,7 +525,7 @@
 
                 <div class="space-y-1.5 mt-4">
                   <label class="text-[13px] font-medium text-slate-700">Note / Additional Information</label>
-                  <textarea ref="noteInput" v-model="newRecord.note" @keydown.enter.exact.prevent="saveRecord" rows="3" placeholder="Add any clinical notes, symptoms, or observations here..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors resize-y"></textarea>
+                  <textarea ref="noteInput" v-model="newRecord.note" @keydown.enter.exact.prevent="recordForm?.requestSubmit()" rows="3" placeholder="Add any clinical notes, symptoms, or observations here..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors resize-y"></textarea>
                   <p class="text-[11px] text-slate-400">Press <kbd class="bg-slate-100 border border-slate-200 px-1 py-0.5 rounded text-[10px]">Enter</kbd> to save. Use <kbd class="bg-slate-100 border border-slate-200 px-1 py-0.5 rounded text-[10px]">Shift + Enter</kbd> for a new line.</p>
                 </div>
 
@@ -719,7 +717,8 @@ const openNewVisitFromHistory = () => {
   const record = viewingRecord.value;
   
   editingRecordId.value = null;
-  selectedFiles.value = []
+  selectedFiles.value = [];
+  existingAttachments.value = [];
   
   const now = new Date();
   recYear.value = now.getFullYear().toString();
@@ -738,7 +737,7 @@ const openNewVisitFromHistory = () => {
     weightHeight: '',
     bmi: '',
     attendingDoctor: record.attendingDoctor,
-    note: record.note || '',
+    note: '',
     weight: '',
     height: ''
   };
@@ -752,6 +751,12 @@ const openViewModal = (record: HealthRecord) => {
   isViewModalOpen.value = true
 }
 
+
+const capitalizeWords = (str: string) => {
+  if (!str) return ""
+  return str.split(" ").map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ")
+}
+
 const isTypeOpen = ref(false)
 const isDateOpen = ref(false)
 
@@ -762,6 +767,7 @@ const heightInput = ref<HTMLInputElement | null>(null)
 const doctorInput = ref<HTMLInputElement | null>(null)
 const noteInput = ref<HTMLTextAreaElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+const recordForm = ref<HTMLFormElement | null>(null)
 
 const recDay = ref<string | number>('')
 const recMonth = ref('')
@@ -831,9 +837,15 @@ const newRecord = ref<HealthRecordForm>({
 })
 
 watch(() => newRecord.value.patientName, (newName) => {
-  const p = recentPatients.value.find(rp => rp.name === newName)
+  if (!newName) return
+  const q = newName.toLowerCase()
+  const p = recentPatients.value.find(rp => rp.name.toLowerCase() === q)
   if (p) {
     newRecord.value.patientId = p.id
+    // Optionally auto-correct the case to match the DB exactly
+    if (newRecord.value.patientName !== p.name) {
+      newRecord.value.patientName = p.name
+    }
   }
 })
 
@@ -942,6 +954,7 @@ const isImage = (url: string) => {
 const openAddModal = () => {
   editingRecordId.value = null
   selectedFiles.value = []
+  existingAttachments.value = []
   loadRecentPatients() // Refresh list on open
   
   isTypeOpen.value = false

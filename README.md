@@ -1,74 +1,79 @@
-# DMR Hospital Portal
+# 🏥 DMR Hospital Portal (Hospital Management System)
 
-A comprehensive healthcare management dashboard with a Vue.js (Vite) frontend and a Custom PHP Backend utilizing Eloquent ORM and Phinx migrations.
+A comprehensive, secure, and modern healthcare management dashboard designed to streamline clinic and hospital operations. Built with a Vue.js 3 frontend and a robust PHP backend.
 
-## 🛠️ Prerequisites
-Before starting, ensure you have the following installed on your laptop:
-- **XAMPP** (Apache & MySQL) with **PHP 8.2** or higher.
-- **Node.js** (v18 or higher) and **npm**.
-- **Composer** (PHP Package Manager).
+## ✨ Key Features
+- **🔐 Secure Authentication:** Encrypted passwords (Bcrypt) and secure session management.
+- **👥 Patient Management:** Complete CRUD operations for patient profiles and demographics.
+- **📂 Health Records:** Track diagnoses, treatments, vitals (BMI, Blood Pressure), and upload medical attachments.
+- **📅 Appointments:** Schedule and manage doctor-patient appointments.
+- **🥗 Diet & Exercise Plans:** Create, view, and print customized health plans for patients.
+- **📊 Interactive Dashboard:** Visual statistics and real-time data using Chart.js.
+
+## 💻 Technologies Used
+**Frontend:**
+- Vue 3 (Composition API) + TypeScript
+- Vite (Build Tool)
+- Tailwind CSS v4 (Styling)
+- Vue Router (Navigation Guards)
+- Axios (API Communication)
+- Lucide Vue Next (Icons)
+
+**Backend:**
+- PHP 8.2 + Slim Framework 4 (RESTful API)
+- Eloquent ORM (Database Management)
+- Phinx (Database Migrations & Seeding)
+
+**Infrastructure:**
+- Docker & Docker Compose
+- MySQL 8.0
+- phpMyAdmin
 
 ---
 
-## 🚀 Setup Instructions
+## 🚀 Quick Start (Recommended: Docker)
 
-### Step 1: Project Placement
-1. Copy or clone the `DMR_project` folder into your XAMPP `htdocs` directory:
-   - **Mac:** `/Applications/XAMPP/xamppfiles/htdocs/DMR_project`
-   - **Windows:** `C:\xampp\htdocs\DMR_project`
+The easiest way to run the backend and database is using Docker. You do not need to install PHP, MySQL, or XAMPP on your host machine.
 
-### Step 2: Database Setup
-1. Open the **XAMPP Control Panel** and Start both **Apache** and **MySQL**.
-2. Open your web browser and go to [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
-3. Click "New" and create an empty database named exactly: **`dmr_db`** (leave the collation as default).
+### 1. Start the Backend & Database
+1. Ensure **Docker** and **Docker Compose** are installed and running.
+2. Open your terminal, navigate to the root of the project (`DMR_project`), and run:
+   ```bash
+   docker-compose up -d
+   ```
+*(This will start the PHP API on port 80, MySQL on port 3306, and phpMyAdmin on port 8081)*
 
-### Step 3: Backend Setup
-1. Open your Terminal (Mac) or Command Prompt / PowerShell (Windows).
-2. Navigate to the `backend` directory of the project:
-   ```bash
-   cd backend
-   ```
-   *(Note for Windows users: `cd C:\xampp\htdocs\DMR_project\backend`)*
-3. Install all required PHP dependencies:
-   ```bash
-   composer install
-   ```
-4. Run the database migrations (this creates the `users` table):
-   ```bash
-   vendor/bin/phinx migrate
-   ```
-5. Run the database seeder (this inserts the default admin account):
-   ```bash
-   vendor/bin/phinx seed:run
-   ```
-
-### Step 4: Frontend Setup
-1. Open a **New** Terminal window (keep the old one open if you like).
-2. Navigate to the `frontend` directory:
+### 2. Start the Frontend
+1. Open a new terminal window and navigate to the `frontend` folder:
    ```bash
    cd frontend
    ```
-   *(Note for Windows users: `cd C:\xampp\htdocs\DMR_project\frontend`)*
-3. Install all required Node dependencies:
+2. Install dependencies and start the Vite development server:
    ```bash
    npm install
-   ```
-4. Start the Vue.js development server:
-   ```bash
    npm run dev
    ```
-
-### Step 5: Test the Application
-1. After running `npm run dev`, the terminal will display a local link (usually `http://localhost:5173` or `http://localhost:5174`).
-2. Open that link in your web browser.
-3. You should see the DMR Hospital Portal login page.
-4. Log in using the default admin credentials seeded in Step 3:
-   - **Email:** `admin@gmail.com`
-   - **Password:** `pass1234`
+3. Open the provided local link in your browser (usually `http://localhost:5173` or `http://localhost:5174`).
 
 ---
 
-## 📂 Project Architecture
-* **Frontend:** Vue 3, Vite, TailwindCSS, Lucide Icons, Vue Router.
-* **Backend:** Plain PHP (MVC Architecture), Illuminate Database (Eloquent ORM), Phinx (Migrations/Seeding).
-* **Communication:** REST API via standard HTTP POST/GET requests (JSON encoded).
+## 🔑 Default Login Credentials
+After the database is initialized and seeded, you can log in using the master admin account:
+- **Email:** `admin@gmail.com`
+- **Password:** `pass1234`
+
+## 🗄️ Database Management
+You can easily manage the MySQL database using the built-in phpMyAdmin container.
+- **URL:** [http://localhost:8081](http://localhost:8081)
+- **Server:** `db`
+- **Username:** `root`
+- **Password:** `2408`
+- **Database Name:** `dmr_db`
+
+---
+
+## 🛡️ Security Highlights
+This project has been heavily reviewed for security best practices:
+- **SQL Injection Prevention:** Utilizes Eloquent ORM Parameterized Queries to prevent payload execution.
+- **Data Encryption:** User passwords are not stored in plain text. They are securely hashed using PHP's native `password_hash()` (Bcrypt algorithm) and verified via `password_verify()`.
+- **CORS Protection:** Configured to strictly allow communication between the allowed frontend origins and the backend API.

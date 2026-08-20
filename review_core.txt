@@ -1,0 +1,614 @@
+import './assets/main.css'
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router' 
+
+const app = createApp(App)
+app.use(router) 
+app.mount('#app')<script setup lang="ts">
+
+</script>
+
+<template>
+    <router-view></router-view> 
+</template>
+import { createRouter, createWebHistory } from 'vue-router'
+import Login from '../components/Login.vue'
+import Dashboard from '../views/DashboardView.vue'
+import ManagePatients from '../views/ManagePatientsView.vue'
+import HealthRecords from '../views/HealthRecordsView.vue'
+import Settings from '../views/SettingsView.vue'
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/', name: 'login', component: Login },
+    { path: '/dashboard', name: 'dashboard', component: Dashboard },
+    { path: '/patients', name: 'patients', component: ManagePatients },
+    { path: '/health-records', name: 'health-records', component: HealthRecords },
+    { path: '/settings', name: 'settings', component: Settings }
+  ]
+})
+
+export default router// frontend/src/services/api.ts
+
+const API_BASE_URL = 'http://localhost/DMR_project/backend/public';
+
+export const api = {
+  async get(endpoint: string) {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.json();
+  },
+
+  async post(endpoint: string, body: any) {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      credentials: 'include', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return response.json();
+  },
+
+  async postFormData(endpoint: string, formData: FormData) {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+    return response.json();
+  },
+
+  async put(endpoint: string, body: any) {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      credentials: 'include', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return response.json();
+  },
+
+  async delete(endpoint: string) {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.json();
+  }
+};<?php
+// backend/public/index.php
+
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Factory\AppFactory;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+session_start();
+
+// 1. Connect to Database (ORM)
+require __DIR__ . '/../config/database.php';
+
+$app = AppFactory::create();
+
+$app->setBasePath('/DMR_project/backend/public');
+$app->addErrorMiddleware(true, true, true);
+
+// Add CORS (This allows your Vue frontend to talk to the backend)
+$app->add(function (Request $request, $handler) {
+    $response = $handler->handle($request);
+
+    $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+
+    return $response
+        ->withHeader('Access-Control-Allow-Origin', $origin)
+        ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->withHeader('Access-Control-Allow-Credentials', 'true');
+});
+
+// Handle CORS Preflight requests for all routes
+$app->options('/{routes:.+}', function ($request, $response, $args) {
+    return $response;
+});
+
+// RESTFUL API ROUTES (Write everything in ONE file!)
+
+// Login API
+$app->post('/api/auth/login', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/AuthController.php';
+    (new AuthController())->login();
+    return $response; // AuthController already echoes JSON, so we just return the response
+});
+
+
+// PATIENT API ROUTES
+$app->get('/api/patients', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/PatientController.php';
+    (new PatientController())->getAllPatients();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/api/patients/{id}', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/PatientController.php';
+    (new PatientController())->getPatientById($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/patients', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/PatientController.php';
+    (new PatientController())->createPatient();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->put('/api/patients/{id}', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/PatientController.php';
+    (new PatientController())->updatePatient($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->delete('/api/patients/{id}', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/PatientController.php';
+    (new PatientController())->deletePatient($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+
+// --> HEALTH RECORDS API ROUTES
+
+$app->get('/api/health-records', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/HealthRecordController.php';
+    (new HealthRecordController())->getAllRecords();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/health-records', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/HealthRecordController.php';
+    (new HealthRecordController())->createRecord();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->put('/api/health-records/{id}', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/HealthRecordController.php';
+    (new HealthRecordController())->updateRecord($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/health-records/{id}', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/HealthRecordController.php';
+    (new HealthRecordController())->updateRecord($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->delete('/api/health-records/{id}', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/HealthRecordController.php';
+    (new HealthRecordController())->deleteRecord($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+// Run the app
+$app->run();<?php
+
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Events\Dispatcher;
+use Illuminate\Container\Container;
+
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$capsule = new Capsule;
+
+$capsule->addConnection([
+    'driver'    => 'mysql',
+    'host'      => '127.0.0.1',
+    'database'  => 'dmr_db',
+    'username'  => 'root',
+    'password'  => '',
+    'charset'   => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
+    'prefix'    => '',
+]);
+
+$capsule->setEventDispatcher(new Dispatcher(new Container));
+$capsule->setAsGlobal();
+$capsule->bootEloquent();<?php
+// backend/src/AuthController.php
+
+class AuthController {
+    // Login
+    public function login() {
+        $max_attempts = 5;
+        $lockout_time = 60;
+
+        if (isset($_SESSION['locked_until']) && $_SESSION['locked_until'] > time()) {
+            $remaining_time = $_SESSION['locked_until'] - time();
+            echo json_encode(['status' => 'locked', 'message' => "Too many failed attempts. Please wait $remaining_time seconds.", 'remaining_time' => $remaining_time]);
+            return;
+        }
+
+        if (isset($_SESSION['locked_until']) && $_SESSION['locked_until'] <= time()) {
+            unset($_SESSION['locked_until']);
+            $_SESSION['failed_attempts'] = 0;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = $data['email'] ?? '';
+            $password = $data['password'] ?? '';
+
+            if (!isset($_SESSION['failed_attempts'])) $_SESSION['failed_attempts'] = 0;
+
+            // call the User Model
+            require_once __DIR__ . '/User.php';
+            
+            // Find the user by email using Eloquent ORM
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                echo json_encode(['status' => 'error', 'message' => "Email not found!"]);
+                return;
+            }
+            if ($user->password !== $password) {
+                echo json_encode(['status' => 'error', 'message' => "Password mismatch!"]);
+                return;
+            }
+
+            $_SESSION['failed_attempts'] = 0;
+            echo json_encode(['status' => 'success', 'message' => 'Login successful!', 'role' => $user->role, 'username' => $user->username]);
+        }
+    }
+
+    // logout
+    public function logout() {
+        session_destroy();
+        echo json_encode(['status' => 'success', 'message' => 'Logout successful!']);
+    }
+}<?php
+
+class PatientController {
+    
+    // GET
+    public function getAllPatients() {
+        require_once __DIR__ . '/Patient.php';
+        $patients = Patient::all();
+        echo json_encode(["status" => "success", "data" => $patients]);
+    }
+
+    // POST
+    public function createPatient() {
+        require_once __DIR__ . '/Patient.php';
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $lastPatient = Patient::orderBy('id', 'desc')->first();
+        $nextId = 1001;
+        if ($lastPatient && preg_match('/P-(\d+)/', $lastPatient->patient_id, $matches)) {
+            $nextId = intval($matches[1]) + 1;
+        }
+
+        $patient = new Patient();
+        $patient->patient_id = 'P-' . $nextId;
+        $patient->first_name = $data['first_name'] ?? '';
+        $patient->last_name = $data['last_name'] ?? '';
+        $patient->gender = $data['gender'] ?? 'Other';
+        $patient->dob = $data['dob'] ?? date('Y-m-d');
+        $patient->phone = $data['phone'] ?? '';
+        $patient->address = $data['address'] ?? '';
+        $patient->status = $data['status'] ?? 'Active';
+        $patient->save();
+
+        echo json_encode([
+            "status" => "success", 
+            "message" => "Patient added successfully!",
+            "patient" => [
+                "id" => $patient->patient_id,
+                "name" => $patient->first_name . ' ' . $patient->last_name
+            ]
+        ]);
+    }
+
+    // PUT
+    public function updatePatient($id) {
+        require_once __DIR__ . '/Patient.php';
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $patient = Patient::find($id);
+        if (!$patient) {
+            echo json_encode(["status" => "error", "message" => "Patient not found"]);
+            return;
+        }
+
+        if (isset($data['first_name'])) $patient->first_name = $data['first_name'];
+        if (isset($data['last_name'])) $patient->last_name = $data['last_name'];
+        if (isset($data['gender'])) $patient->gender = $data['gender'];
+        if (isset($data['dob'])) $patient->dob = $data['dob'];
+        if (isset($data['phone'])) $patient->phone = $data['phone'];
+        if (isset($data['address'])) $patient->address = $data['address'];
+        if (isset($data['status'])) $patient->status = $data['status'];
+        $patient->save();
+
+        echo json_encode(["status" => "success", "message" => "Patient updated successfully!"]);
+    }
+
+    // 4. DELETE
+    public function deletePatient($id) {
+        require_once __DIR__ . '/Patient.php';
+        $patient = Patient::find($id);
+        if ($patient) {
+            $patient->delete();
+        }
+        echo json_encode(["status" => "success", "message" => "Patient deleted successfully!"]);
+    }
+
+    public function getPatientById($id) {
+        require_once __DIR__ . '/Patient.php';
+        $patient = Patient::find($id);
+        if ($patient) {
+            echo json_encode(["status" => "success", "data" => $patient]);
+        } else {
+            http_response_code(404);
+            echo json_encode(["status" => "error", "message" => "Patient not found"]);
+        }
+    }
+}<?php
+
+class HealthRecordController {
+    
+    // GET all records
+    public function getAllRecords() {
+        require_once __DIR__ . '/HealthRecord.php';
+        require_once __DIR__ . '/Patient.php';
+        
+        $records = HealthRecord::orderBy('id', 'desc')->get();
+        
+        // Link data manually since there are no hard DB relations
+        foreach ($records as $record) {
+            if (!empty($record->patient_id)) {
+                $patient = Patient::where('patient_id', $record->patient_id)->first();
+                if ($patient) {
+                    $record->gender = $patient->gender; // override with true gender
+                    $record->dob = $patient->dob;       // attach dob
+                }
+            }
+        }
+        
+        echo json_encode(["status" => "success", "data" => $records]);
+    }
+
+    // POST create a new record
+    public function createRecord() {
+        require_once __DIR__ . '/HealthRecord.php';
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data && !empty($_POST)) {
+            $data = $_POST;
+        }
+
+        // Handle File Uploads
+        $attachmentUrls = [];
+
+        $uploadDir = __DIR__ . "/../public/uploads/";
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+
+
+        // Handle multiple files
+        if (isset($_FILES['attachments'])) {
+            $files = $_FILES['attachments'];
+            if (is_array($files['name'])) {
+                for ($i = 0; $i < count($files['name']); $i++) {
+                    if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                        $filename = uniqid() . '_' . basename($files['name'][$i]);
+                        if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $filename)) {
+                            $attachmentUrls[] = '/uploads/' . $filename;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Handle single file fallback
+        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+            $filename = uniqid() . '_' . basename($_FILES['attachment']['name']);
+            if (move_uploaded_file($_FILES['attachment']['tmp_name'], $uploadDir . $filename)) {
+                $attachmentUrls[] = '/uploads/' . $filename;
+            }
+        }
+
+        // Auto-generate record_id (e.g. HR-1001)
+        $lastRecord = HealthRecord::orderBy('id', 'desc')->first();
+        $nextId = 1001;
+        if ($lastRecord && preg_match('/HR-(\d+)/', $lastRecord->record_id, $matches)) {
+            $nextId = intval($matches[1]) + 1;
+        }
+
+        $record = new HealthRecord();
+        $record->record_id = 'HR-' . $nextId;
+        $record->patient_name = $data['patient_name'] ?? '';
+        $record->patient_id = $data['patient_id'] ?? '';
+        $record->gender = $data['gender'] ?? 'Other';
+        $record->status = $data['status'] ?? 'Active';
+        $record->record_type = $data['record_type'] ?? '';
+        $record->date = $data['date'] ?? date('Y-m-d');
+        $record->blood_pressure = $data['blood_pressure'] ?? '';
+        $record->pulse = $data['pulse'] ?? '';
+        $record->weight = $data['weight'] ?? '';
+        $record->height = $data['height'] ?? '';
+        $record->bmi = $data['bmi'] ?? '';
+        $record->attending_doctor = $data['attending_doctor'] ?? '';
+        $record->note = $data['note'] ?? null;
+        
+        if (!empty($attachmentUrls)) {
+            $record->attachment_url = json_encode($attachmentUrls);
+        }
+        
+        $record->save();
+
+        echo json_encode(["status" => "success", "message" => "Record added successfully!"]);
+    }
+
+    // PUT update existing record
+    public function updateRecord($id) {
+        require_once __DIR__ . '/HealthRecord.php';
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data && !empty($_POST)) {
+            $data = $_POST;
+        }
+
+        $record = HealthRecord::find($id);
+        if (!$record) {
+            echo json_encode(["status" => "error", "message" => "Record not found"]);
+            return;
+        }
+
+        // Handle File Uploads
+        $attachmentUrls = [];
+        if (isset($_POST['existing_attachments'])) {
+            $parsed = json_decode($_POST['existing_attachments'], true);
+            if (is_array($parsed)) {
+                $attachmentUrls = $parsed;
+            }
+        }
+
+        $uploadDir = __DIR__ . '/../public/uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Delete orphaned files (removed from UI)
+        $oldAttachments = $record->attachment_url ? json_decode($record->attachment_url, true) : [];
+        if (is_array($oldAttachments)) {
+            foreach ($oldAttachments as $oldFile) {
+                if (!in_array($oldFile, $attachmentUrls)) {
+                    // File was deleted from UI
+                    $filePath = __DIR__ . '/../public' . $oldFile;
+                    if (file_exists($filePath) && is_file($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+            }
+        }
+
+        // Handle multiple files
+        if (isset($_FILES['attachments'])) {
+            $files = $_FILES['attachments'];
+            if (is_array($files['name'])) {
+                for ($i = 0; $i < count($files['name']); $i++) {
+                    if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                        $filename = uniqid() . '_' . basename($files['name'][$i]);
+                        if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $filename)) {
+                            $attachmentUrls[] = '/uploads/' . $filename;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Handle single file fallback
+        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+            $filename = uniqid() . '_' . basename($_FILES['attachment']['name']);
+            if (move_uploaded_file($_FILES['attachment']['tmp_name'], $uploadDir . $filename)) {
+                $attachmentUrls[] = '/uploads/' . $filename;
+            }
+        }
+
+        $record->attachment_url = empty($attachmentUrls) ? null : json_encode($attachmentUrls);
+
+        if (isset($data['patient_name'])) $record->patient_name = $data['patient_name'];
+        if (isset($data['patient_id'])) $record->patient_id = $data['patient_id'];
+        if (isset($data['gender'])) $record->gender = $data['gender'];
+        if (isset($data['status'])) $record->status = $data['status'];
+        if (isset($data['record_type'])) $record->record_type = $data['record_type'];
+        if (isset($data['date'])) $record->date = $data['date'];
+        if (isset($data['blood_pressure'])) $record->blood_pressure = $data['blood_pressure'];
+        if (isset($data['pulse'])) $record->pulse = $data['pulse'];
+        if (isset($data['weight'])) $record->weight = $data['weight'];
+        if (isset($data['height'])) $record->height = $data['height'];
+        if (isset($data['bmi'])) $record->bmi = $data['bmi'];
+        if (isset($data['attending_doctor'])) $record->attending_doctor = $data['attending_doctor'];
+        if (isset($data['note'])) $record->note = $data['note'];
+        
+        $record->save();
+
+        echo json_encode(["status" => "success", "message" => "Record updated successfully!"]);
+    }
+    // DELETE a record
+    public function deleteRecord($id) {
+        require_once __DIR__ . "/HealthRecord.php";
+        $record = HealthRecord::find($id);
+        if ($record) {
+            // Delete associated physical files
+            $attachments = $record->attachment_url ? json_decode($record->attachment_url, true) : [];
+            if (is_array($attachments)) {
+                foreach ($attachments as $fileUrl) {
+                    $filePath = __DIR__ . "/../public" . $fileUrl;
+                    if (file_exists($filePath) && is_file($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+            }
+            
+            $record->delete();
+        }
+        echo json_encode(["status" => "success", "message" => "Record deleted successfully!"]);
+    }
+}
+<?php
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    protected $table = 'users';
+ 
+    public $timestamps = false;
+
+    protected $fillable = ['username', 'email', 'password', 'role'];
+}<?php
+use Illuminate\Database\Eloquent\Model;
+
+class Patient extends Model
+{
+    protected $table = 'patients';
+ 
+    public $timestamps = false; 
+
+    protected $fillable = [
+        'patient_id', 
+        'first_name', 
+        'last_name', 
+        'gender', 
+        'dob', 
+        'phone', 
+        'address',
+        'status'
+    ];
+}<?php
+
+use Illuminate\Database\Eloquent\Model;
+
+class HealthRecord extends Model {
+    protected $table = 'health_records';
+    
+    protected $fillable = [
+        'record_id',
+        'patient_name',
+        'patient_id',
+        'gender',
+        'status',
+        'record_type',
+        'date',
+        'blood_pressure',
+        'pulse',
+        'weight',
+        'height',
+        'bmi',
+        'attending_doctor'
+    ];
+}

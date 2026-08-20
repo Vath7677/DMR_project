@@ -1,1 +1,17 @@
+# Allow CORS for images
 Header set Access-Control-Allow-Origin "*"
+
+# 🛡️ SECURITY: Prevent PHP execution in uploads folder!
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# Force files to be served as static types, avoiding execution
+AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .php8
+Options -Indexes -ExecCGI
