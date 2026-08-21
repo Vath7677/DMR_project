@@ -313,10 +313,10 @@
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Attachments</p>
                     <div class="flex flex-wrap gap-3">
                       <template v-for="(fileUrl, index) in getAttachments(record.attachment_url)" :key="index">
-                        <a v-if="isImage(fileUrl)" href="#" @click.prevent="openImagePreview('http://localhost/DMR_project/backend/public' + fileUrl)" class="block rounded-lg overflow-hidden border border-slate-200 shadow-sm hover:ring-2 hover:ring-teal-500 transition-all cursor-pointer">
-                          <img :src="'http://localhost/DMR_project/backend/public' + fileUrl" alt="Attachment" class="h-20 w-20 object-cover" />
+                        <a v-if="isImage(fileUrl)" href="#" @click.prevent="openImagePreview(getFileUrl(fileUrl))" class="block rounded-lg overflow-hidden border border-slate-200 shadow-sm hover:ring-2 hover:ring-teal-500 transition-all cursor-pointer">
+                          <img :src="getFileUrl(fileUrl)" alt="Attachment" class="h-20 w-20 object-cover" />
                         </a>
-                        <a v-else :href="'http://localhost/DMR_project/backend/public' + fileUrl" target="_blank" class="text-[12px] px-3 py-1.5 h-10 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md font-semibold flex items-center gap-1.5 transition-colors border border-blue-100">
+                        <a v-else :href="getFileUrl(fileUrl)" target="_blank" class="text-[12px] px-3 py-1.5 h-10 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md font-semibold flex items-center gap-1.5 transition-colors border border-blue-100">
                           <FileText class="w-3.5 h-3.5" /> File {{ index + 1 }}
                         </a>
                       </template>
@@ -557,10 +557,10 @@
                     <p class="text-[12px] font-medium text-slate-500 mb-2">Current Attachments:</p>
                     <div class="flex flex-wrap gap-2">
                       <div v-for="(fileUrl, index) in existingAttachments" :key="'old'+index" class="relative group">
-                        <a v-if="isImage(fileUrl)" href="#" @click.prevent="openImagePreview('http://localhost/DMR_project/backend/public' + fileUrl)" class="block rounded-md overflow-hidden border border-slate-200 shadow-sm transition-all cursor-pointer">
-                          <img :src="'http://localhost/DMR_project/backend/public' + fileUrl" alt="Attachment" class="h-12 w-12 object-cover" />
+                        <a v-if="isImage(fileUrl)" href="#" @click.prevent="openImagePreview(getFileUrl(fileUrl))" class="block rounded-md overflow-hidden border border-slate-200 shadow-sm transition-all cursor-pointer">
+                          <img :src="getFileUrl(fileUrl)" alt="Attachment" class="h-12 w-12 object-cover" />
                         </a>
-                        <a v-else :href="'http://localhost/DMR_project/backend/public' + fileUrl" target="_blank" class="text-[11px] px-2 py-1 bg-slate-100 text-blue-600 hover:bg-slate-200 rounded flex items-center h-12 gap-1 transition-colors">
+                        <a v-else :href="getFileUrl(fileUrl)" target="_blank" class="text-[11px] px-2 py-1 bg-slate-100 text-blue-600 hover:bg-slate-200 rounded flex items-center h-12 gap-1 transition-colors">
                           <FileText class="w-3 h-3" /> File {{ index + 1 }}
                         </a>
                         <button type="button" @click.prevent="removeExistingAttachment(index)" class="absolute -top-1.5 -right-1.5 bg-white text-slate-400 hover:text-rose-500 rounded-full border border-slate-200 p-0.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -934,6 +934,10 @@ const getBmiClass = (bmiStr: string) => {
   if (bmi >= 18.5 && bmi < 25) return 'bg-green-100 text-green-700'
   if (bmi >= 25 && bmi < 30) return 'bg-yellow-100 text-yellow-700'
   return 'bg-red-100 text-red-700'
+}
+
+const getFileUrl = (url: string) => {
+  return (import.meta.env.VITE_API_BASE_URL || "http://localhost") + url;
 }
 
 const getAttachments = (attachmentUrl?: string) => {

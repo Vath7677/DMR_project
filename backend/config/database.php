@@ -11,7 +11,7 @@ $capsule = new Capsule;
 
 $capsule->addConnection([
     'driver'    => 'mysql',
-    'host'      => getenv('DB_HOST') ?: '127.0.0.1',
+    'host'      => getenv('DB_HOST') ?: 'db',
     'database'  => getenv('DB_DATABASE') ?: 'dmr_db',
     'username'  => getenv('DB_USERNAME') ?: 'root',
     'password'  => getenv('DB_PASSWORD') ?: '2408',
