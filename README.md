@@ -60,14 +60,6 @@ After the database is initialized and seeded, you can log in using the master ad
 - **Email:** `admin@gmail.com`
 - **Password:** `pass1234`
 
-## 🗄️ Database Management
-You can easily manage the MySQL database using the built-in phpMyAdmin container.
-- **URL:** [http://localhost:8081](http://localhost:8081)
-- **Server:** `db`
-- **Username:** `root`
-- **Password:** `2408`
-- **Database Name:** `dmr_db`
-
 ---
 
 ## 🛡️ Security Highlights
