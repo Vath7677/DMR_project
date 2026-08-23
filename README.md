@@ -55,13 +55,6 @@ The easiest way to run the backend and database is using Docker. You do not need
 
 ---
 
-## 🔑 Default Login Credentials
-After the database is initialized and seeded, you can log in using the master admin account:
-- **Email:** `admin@gmail.com`
-- **Password:** `pass1234`
-
----
-
 ## 🛡️ Security Highlights
 This project has been heavily reviewed for security best practices:
 - **SQL Injection Prevention:** Utilizes Eloquent ORM Parameterized Queries to prevent payload execution.
