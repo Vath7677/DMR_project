@@ -46,9 +46,8 @@ $app->options('/{routes:.+}', function ($request, $response, $args) {
 $app->add(function (Request $request, $handler) {
     $path = $request->getUri()->getPath();
     
-    // Ignore login and OPTIONS requests
-    // Using strpos allows it to match /DMR_project/backend/public/api/auth/login
-    if (strpos($path, '/api/auth/login') !== false || $request->getMethod() === 'OPTIONS') {
+    // Ignore login, profile/avatar, and OPTIONS requests
+    if (strpos($path, '/api/auth/login') !== false || strpos($path, '/api/user/') !== false || strpos($path, '/uploads/') !== false || $request->getMethod() === 'OPTIONS') {
         return $handler->handle($request);
     }
 
@@ -67,11 +66,67 @@ $app->add(function (Request $request, $handler) {
 
 // RESTFUL API ROUTES (Write everything in ONE file!)
 
-// Login API
+// AUTH & USER PROFILE API ROUTES
 $app->post('/api/auth/login', function (Request $request, Response $response, $args) {
     require_once __DIR__ . '/../src/AuthController.php';
     (new AuthController())->login();
-    return $response; // AuthController already echoes JSON, so we just return the response
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/auth/logout', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/AuthController.php';
+    (new AuthController())->logout();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/api/user/profile', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/AuthController.php';
+    (new AuthController())->getProfile();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->put('/api/user/profile', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/AuthController.php';
+    (new AuthController())->updateProfile();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/user/avatar', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/AuthController.php';
+    (new AuthController())->uploadAvatar();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->delete('/api/user/avatar', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/AuthController.php';
+    (new AuthController())->deleteAvatar();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/user/password', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/AuthController.php';
+    (new AuthController())->updatePassword();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+// Explicit Uploads File Serving Route (Guarantees image loads regardless of Apache root)
+$app->get('/uploads/{filename:.+}', function (Request $request, Response $response, $args) {
+    $filePath = __DIR__ . '/uploads/' . basename($args['filename']);
+    if (file_exists($filePath) && is_file($filePath)) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml'
+        ];
+        $contentType = $mimes[$ext] ?? 'application/octet-stream';
+        $response->getBody()->write(file_get_contents($filePath));
+        return $response->withHeader('Content-Type', $contentType)->withHeader('Access-Control-Allow-Origin', '*');
+    }
+    return $response->withStatus(404);
 });
 
 

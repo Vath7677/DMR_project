@@ -50,7 +50,12 @@
       <header class="h-[76px] bg-white border-b border-slate-100 flex items-center justify-end px-8 z-30 relative shrink-0">
         <div class="flex items-center">
           <button @click="isProfileOpen = !isProfileOpen" class="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-lg transition-colors focus:outline-none cursor-pointer">
-            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-teal-500 shadow-2xs" />
+            <img 
+              :src="userAvatar || defaultAvatar" 
+              @error="handleImageFallback"
+              alt="Doctor Avatar" 
+              class="w-10 h-10 rounded-full object-cover border-2 border-teal-500 shadow-2xs bg-slate-100" 
+            />
             <div class="flex flex-col text-left">
               <span class="text-[14px] font-bold text-slate-800 leading-tight">{{ username }}</span>
             </div>
@@ -67,9 +72,13 @@
                 <X class="w-4 h-4 group-hover:scale-110 transition-transform" />
               </button>
               <div class="flex flex-col items-center text-center mt-2">
-                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-teal-500 mb-3 shadow-sm" />
+                <img 
+                  :src="userAvatar || defaultAvatar" 
+                  @error="handleImageFallback"
+                  alt="Doctor Avatar" 
+                  class="w-16 h-16 rounded-full object-cover border-2 border-teal-500 mb-3 shadow-sm bg-slate-100" 
+                />
                 <span class="text-[16px] font-bold text-slate-800 leading-tight">{{ username }}</span>
-                <span class="text-[13px] text-teal-600 font-medium leading-tight mt-1">{{ userRole }}</span>
                 <span class="text-[12px] text-slate-500 mt-1">{{ userEmail }}</span>
               </div>
             </div>
@@ -95,32 +104,91 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from './services/api'
+import defaultAvatar from '@/assets/profiledefault.svg'
 import { LineChart, Users, FileText, Settings, LogOut, ChevronDown, X, User, Edit } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
 
-// Reactive user profile refs loaded from database/session/localStorage
-const username = ref('Dr. Sarah Jenkins')
-const userEmail = ref('sarah.jenkins@dmr.hospital')
-const userRole = ref('Chief Medical Officer')
+// Reactive user profile refs
+const username = ref('admin')
+const userEmail = ref('admin@gmail.com')
+const userAvatar = ref<string>('')
 const isProfileOpen = ref(false)
 
-const loadUserProfile = () => {
+const resolveServerUrl = (path: string) => {
+  if (!path) return ''
+  if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
+    return path
+  }
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path
+  return `http://localhost/DMR_project/backend/public/${cleanPath}`
+}
+
+const handleImageFallback = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  if (img && img.src) {
+    if (img.src.includes('/DMR_project/backend/public/uploads/')) {
+      img.src = img.src.replace('/DMR_project/backend/public/uploads/', '/uploads/')
+    } else if (img.src.includes(':5184/uploads/')) {
+      img.src = `http://localhost/uploads/${img.src.split('/uploads/')[1]}`
+    } else {
+      img.src = defaultAvatar
+    }
+  }
+}
+
+const loadUserProfile = async () => {
   const storedName = localStorage.getItem('username')
   const storedEmail = localStorage.getItem('userEmail')
-  const storedRole = localStorage.getItem('userRole')
+  const storedAvatar = localStorage.getItem('userAvatar')
   
   if (storedName) username.value = storedName
   if (storedEmail) userEmail.value = storedEmail
-  if (storedRole) userRole.value = storedRole
+  if (storedAvatar) userAvatar.value = resolveServerUrl(storedAvatar)
+
+  // Fetch latest profile from backend API
+  try {
+    const res = await api.get('/api/user/profile')
+    if (res && res.status === 'success' && res.data) {
+      if (res.data.username) {
+        username.value = res.data.username
+        localStorage.setItem('username', res.data.username)
+      }
+      if (res.data.email) {
+        userEmail.value = res.data.email
+        localStorage.setItem('userEmail', res.data.email)
+      }
+      if (res.data.avatar) {
+        const url = resolveServerUrl(res.data.avatar)
+        userAvatar.value = url
+        localStorage.setItem('userAvatar', url)
+      }
+    }
+  } catch (err) {
+    // Continue with localStorage
+  }
+}
+
+const onProfileUpdated = () => {
+  const storedName = localStorage.getItem('username')
+  const storedEmail = localStorage.getItem('userEmail')
+  const storedAvatar = localStorage.getItem('userAvatar')
+  if (storedName) username.value = storedName
+  if (storedEmail) userEmail.value = storedEmail
+  userAvatar.value = storedAvatar ? resolveServerUrl(storedAvatar) : ''
 }
 
 onMounted(() => {
   loadUserProfile()
+  window.addEventListener('profile-updated', onProfileUpdated)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('profile-updated', onProfileUpdated)
 })
 
 // Keep profile in sync on route changes
@@ -145,6 +213,7 @@ const handleLogout = async () => {
     localStorage.removeItem('username')
     localStorage.removeItem('userEmail')
     localStorage.removeItem('userRole')
+    localStorage.removeItem('userAvatar')
     router.push('/')
   }
 }

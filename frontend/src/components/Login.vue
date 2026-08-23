@@ -185,6 +185,11 @@ const handleLogin = async () => {
         localStorage.setItem('username', data.username || 'Dr. Sarah Jenkins');
         localStorage.setItem('userEmail', data.email || email.value || 'doctor@dmr.hospital');
         if (data.role) localStorage.setItem('userRole', data.role);
+        if (data.avatar) {
+            localStorage.setItem('userAvatar', data.avatar);
+        } else {
+            localStorage.removeItem('userAvatar');
+        }
         
         // Save OR Remove email and password based on Remember Me checkbox
         if (rememberMe.value === true) {

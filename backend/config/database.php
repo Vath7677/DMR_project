@@ -23,3 +23,10 @@ $capsule->addConnection([
 $capsule->setEventDispatcher(new Dispatcher(new Container));
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
+
+// Guarantee avatar column exists in users table
+try {
+    Capsule::statement("ALTER TABLE `users` ADD `avatar` VARCHAR(255) NULL AFTER `role`;");
+} catch (\Exception $e) {
+    // Already exists
+}
