@@ -1,63 +1,19 @@
 <template>
-  <div class="flex-1 flex flex-col h-full overflow-hidden">
-    <!-- Header -->
-    <header class="h-[76px] bg-white border-b border-slate-100 flex items-center justify-end px-8 z-50 relative">
-        <div class="flex items-center">
-          <button @click="isProfileOpen = !isProfileOpen" class="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-lg transition-colors focus:outline-none">
-            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-teal-500" />
-            <div class="flex flex-col text-left">
-              <span class="text-[14px] font-bold text-slate-800 leading-tight">Dr. Sarah Jenkins</span>
-              <span class="text-[12px] text-slate-500 leading-tight">Chief Medical Officer</span>
-            </div>
-            <ChevronDown class="w-4 h-4 text-slate-400 ml-1" />
-          </button>
-          
-          <!-- Click outside overlay -->
-          <div v-if="isProfileOpen || isSortOpen || isGenderOpen" @click="isProfileOpen = false; isSortOpen = false; isGenderOpen = false" class="fixed inset-0 z-40"></div>
-          
-          <!-- Profile Dropdown -->
-          <div v-if="isProfileOpen" class="absolute top-[70px] right-8 w-[280px] bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden" style="animation: fadeIn 0.2s ease-in-out;">
-            <div class="p-5 border-b border-slate-100 relative">
-              <button @click="isProfileOpen = false" class="absolute top-3 right-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-full transition-colors group" title="Close">
-                <X class="w-4 h-4 group-hover:scale-110 transition-transform" />
-              </button>
-              <div class="flex flex-col items-center text-center mt-2">
-                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-teal-500 mb-3 shadow-sm" />
-                <span class="text-[16px] font-bold text-slate-800 leading-tight">Dr. Sarah Jenkins</span>
-                <span class="text-[13px] text-teal-600 font-medium leading-tight mt-1">Chief Medical Officer</span>
-                <span class="text-[12px] text-slate-500 mt-1">sarah.jenkins@dmr.hospital</span>
-              </div>
-            </div>
-            <div class="p-2">
-              <router-link to="/settings" class="flex items-center justify-between px-4 py-2.5 text-[14px] font-medium text-slate-600 hover:bg-slate-50 hover:text-teal-600 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                  <User class="w-4 h-4" />
-                  <span>Edit Profile</span>
-                </div>
-                <Edit class="w-4 h-4" />
-              </router-link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <!-- Content Area -->
-      <main class="flex-1 px-8 py-8 overflow-y-auto bg-slate-50/60">
-        
-        <div class="mb-6 flex justify-between items-end">
-          <div>
-            <h1 class="text-[24px] font-heading font-bold text-slate-900 tracking-tight">Patients</h1>
-            <p class="text-[14px] text-slate-500 mt-1 font-medium">Manage patient profiles, demographics, and contact information.</p>
-          </div>
-          <button @click="openAddModal" class="flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-semibold text-sm hover:bg-teal-700 transition-colors shadow-sm">
-            <Plus class="w-4 h-4" />
-            <span>Add Patient</span>
-          </button>
-        </div>
-        
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-          <!-- Table Header Options -->
-          <div class="p-6 border-b border-slate-100 bg-white">
+  <div class="px-8 py-8 bg-slate-50/60 min-h-full">
+    <div class="mb-6 flex justify-between items-end">
+      <div>
+        <h1 class="text-[24px] font-heading font-bold text-slate-900 tracking-tight">Patients</h1>
+        <p class="text-[14px] text-slate-500 mt-1 font-medium">Manage patient profiles, demographics, and contact information.</p>
+      </div>
+      <button @click="openAddModal" class="flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-semibold text-sm hover:bg-teal-700 transition-colors shadow-sm cursor-pointer">
+        <Plus class="w-4 h-4" />
+        <span>Add Patient</span>
+      </button>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+      <!-- Table Header Options -->
+      <div class="p-6 border-b border-slate-100 bg-white">
             <div class="flex flex-col md:flex-row gap-4 items-end justify-between">
               <!-- Search Bar -->
               <div class="relative w-full md:w-[400px] flex-none">
@@ -164,8 +120,6 @@
             </table>
           </div>
         </div>
-      </main>
-    </div>
 
     <!-- View Patient Modal -->
     <div v-if="isViewModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center">
@@ -378,16 +332,15 @@
             {{ editingPatientId ? 'Save Changes' : 'Save Patient' }}
           </button>
         </div>
-
       </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { api } from '../services/api'
-import { Activity, LayoutDashboard, Users, FileText, LogOut, Search, HeartPulse, LineChart, CalendarCheck, Apple, Plus, Filter, Edit, Trash2, Settings, ChevronDown, X, User, ArrowDownUp, AlertCircle, Eye, Phone, MapPin } from 'lucide-vue-next'
+import { Search, Plus, Edit, Trash2, ChevronDown, X, Phone, MapPin } from 'lucide-vue-next'
 
 interface Patient {
   id: string;
@@ -401,16 +354,6 @@ interface Patient {
   address?: string;
 }
 
-const router = useRouter()
-const username = ref('User') 
-const isProfileOpen = ref(false)
-
-const menuItems = ref([
-  { name: 'Dashboard', path: '/dashboard', icon: LineChart },
-  { name: 'Manage Patients', path: '/patients', icon: Users },
-  { name: 'Health Records', path: '/health-records', icon: FileText },
-  { name: 'Settings', path: '/settings', icon: Settings }
-])
 const isSortOpen = ref(false)
 const currentSort = ref('Newest')
 const isGenderOpen = ref(false)
@@ -585,10 +528,6 @@ const capitalizeName = (val: string) => {
   return val.replace(/\b[a-z]/g, char => char.toUpperCase())
 }
 
-const userInitial = computed(() => {
-  return username.value ? username.value.charAt(0).toUpperCase() : 'U'
-})
-
 const fetchPatients = async () => {
   try {
     const response = await api.get('/api/patients')
@@ -696,21 +635,6 @@ const savePatient = async () => {
 }
 
 onMounted(() => {
-  const storedName = localStorage.getItem('username')
-  if (storedName) {
-    username.value = storedName
-  }
   fetchPatients()
 })
-
-const handleLogout = async () => {
-  try {
-    await api.post('/api/auth/logout', {});
-  } catch (error: any) {
-    console.error('Logout error:', error);
-  } finally {
-    localStorage.removeItem('username');
-    router.push('/');
-  }
-}
 </script>

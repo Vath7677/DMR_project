@@ -63,7 +63,13 @@ class AuthController {
             $_SESSION['username'] = $user->username;
             $_SESSION['role'] = $user->role;
 
-            echo json_encode(['status' => 'success', 'message' => 'Login successful!', 'role' => $user->role, 'username' => $user->username]);
+            echo json_encode([
+                'status' => 'success', 
+                'message' => 'Login successful!', 
+                'role' => $user->role, 
+                'username' => $user->username,
+                'email' => $user->email
+            ]);
         }
     }
 

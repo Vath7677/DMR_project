@@ -1,13 +1,13 @@
 <template>
-  <!-- If on login page, render full screen without sidebar -->
+  <!-- If on login page, render full screen without sidebar/header -->
   <div v-if="$route.path === '/'" class="w-full">
     <router-view />
   </div>
 
-  <!-- Authenticated pages layout with shared sidebar -->
+  <!-- Authenticated pages layout with shared sidebar & shared header -->
   <div v-else class="min-h-screen bg-slate-50 flex">
     <!-- Shared Sidebar -->
-    <aside class="w-[260px] bg-slate-900 text-white flex flex-col z-10 shadow-[4px_0_15px_rgba(0,0,0,0.05)] shrink-0">
+    <aside class="w-[260px] bg-slate-900 text-white flex flex-col z-20 shadow-[4px_0_15px_rgba(0,0,0,0.05)] shrink-0">
       <div class="p-6 flex items-center gap-3 border-b border-white/10">
         <div class="w-10 h-10 flex items-center justify-center shrink-0">
           <img src="@/assets/hospital-logo.png" alt="Hospital Logo" class="w-10 h-10 object-contain drop-shadow-md" />
@@ -37,27 +37,97 @@
 
       <!-- Logout button -->
       <div class="p-5 border-t border-white/10 mt-auto">
-        <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg font-medium text-[14px] transition-all duration-200">
+        <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg font-medium text-[14px] transition-all duration-200 cursor-pointer">
           <LogOut class="w-5 h-5" />
           <span>Logout</span>
         </button>
       </div>
     </aside>
 
-    <!-- Main View Content Area -->
+    <!-- Main View Content Area with Shared Top Header -->
     <div class="flex-1 flex flex-col h-screen overflow-hidden">
-      <router-view />
+      <!-- Shared Top Bar Header -->
+      <header class="h-[76px] bg-white border-b border-slate-100 flex items-center justify-end px-8 z-30 relative shrink-0">
+        <div class="flex items-center">
+          <button @click="isProfileOpen = !isProfileOpen" class="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-lg transition-colors focus:outline-none cursor-pointer">
+            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-teal-500 shadow-2xs" />
+            <div class="flex flex-col text-left">
+              <span class="text-[14px] font-bold text-slate-800 leading-tight">{{ username }}</span>
+            </div>
+            <ChevronDown class="w-4 h-4 text-slate-400 ml-1 transition-transform duration-200" :class="{ 'rotate-180': isProfileOpen }" />
+          </button>
+          
+          <!-- Click outside overlay -->
+          <div v-if="isProfileOpen" @click="isProfileOpen = false" class="fixed inset-0 z-40"></div>
+          
+          <!-- Profile Dropdown -->
+          <div v-if="isProfileOpen" class="absolute top-[70px] right-8 w-[280px] bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden" style="animation: fadeIn 0.2s ease-in-out;">
+            <div class="p-5 border-b border-slate-100 relative">
+              <button @click="isProfileOpen = false" class="absolute top-3 right-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-full transition-colors group cursor-pointer" title="Close">
+                <X class="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
+              <div class="flex flex-col items-center text-center mt-2">
+                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-teal-500 mb-3 shadow-sm" />
+                <span class="text-[16px] font-bold text-slate-800 leading-tight">{{ username }}</span>
+                <span class="text-[13px] text-teal-600 font-medium leading-tight mt-1">{{ userRole }}</span>
+                <span class="text-[12px] text-slate-500 mt-1">{{ userEmail }}</span>
+              </div>
+            </div>
+            <div class="p-2">
+              <router-link to="/settings" class="flex items-center justify-between px-4 py-2.5 text-[14px] font-medium text-slate-600 hover:bg-slate-50 hover:text-teal-600 rounded-xl transition-colors" @click="isProfileOpen = false">
+                <div class="flex items-center gap-3">
+                  <User class="w-4 h-4" />
+                  <span>Edit Profile</span>
+                </div>
+                <Edit class="w-4 h-4" />
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Routed Page Main Body -->
+      <div class="flex-1 overflow-y-auto">
+        <router-view />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { api } from './services/api'
-import { HeartPulse, LineChart, Users, FileText, Settings, LogOut } from 'lucide-vue-next'
+import { LineChart, Users, FileText, Settings, LogOut, ChevronDown, X, User, Edit } from 'lucide-vue-next'
 
 const router = useRouter()
+const route = useRoute()
+
+// Reactive user profile refs loaded from database/session/localStorage
+const username = ref('Dr. Sarah Jenkins')
+const userEmail = ref('sarah.jenkins@dmr.hospital')
+const userRole = ref('Chief Medical Officer')
+const isProfileOpen = ref(false)
+
+const loadUserProfile = () => {
+  const storedName = localStorage.getItem('username')
+  const storedEmail = localStorage.getItem('userEmail')
+  const storedRole = localStorage.getItem('userRole')
+  
+  if (storedName) username.value = storedName
+  if (storedEmail) userEmail.value = storedEmail
+  if (storedRole) userRole.value = storedRole
+}
+
+onMounted(() => {
+  loadUserProfile()
+})
+
+// Keep profile in sync on route changes
+watch(() => route.path, () => {
+  loadUserProfile()
+  isProfileOpen.value = false
+})
 
 const menuItems = ref([
   { name: 'Dashboard', path: '/dashboard', icon: LineChart },
@@ -73,7 +143,16 @@ const handleLogout = async () => {
     console.error('Logout error:', error)
   } finally {
     localStorage.removeItem('username')
+    localStorage.removeItem('userEmail')
+    localStorage.removeItem('userRole')
     router.push('/')
   }
 }
 </script>
+
+<style>
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>

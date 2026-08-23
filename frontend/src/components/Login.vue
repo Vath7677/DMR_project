@@ -116,7 +116,7 @@
         <!-- Copyright Footer -->
         <div class="text-center mt-4">
           <p class="text-gray-500 font-bold text-sm">
-            Copyright &copy; TechSimplified- 2026
+            Copyright &copy; Vath-2026
           </p>
         </div>
       </div>
@@ -182,8 +182,9 @@ const handleLogin = async () => {
     } else if (data.status === 'success') {
         isLocked.value = false;
         if (timer) clearInterval(timer);
-        console.log("Login Success! Role:", data.role);
-        localStorage.setItem('username', data.username);
+        localStorage.setItem('username', data.username || 'Dr. Sarah Jenkins');
+        localStorage.setItem('userEmail', data.email || email.value || 'doctor@dmr.hospital');
+        if (data.role) localStorage.setItem('userRole', data.role);
         
         // Save OR Remove email and password based on Remember Me checkbox
         if (rememberMe.value === true) {

@@ -1,222 +1,259 @@
 <template>
-  <div class="flex-1 flex flex-col h-full overflow-hidden">
-    <!-- Header -->
-    <header class="h-[76px] bg-white border-b border-slate-100 flex items-center justify-end px-8 z-50 relative">
-        <div class="flex items-center">
-          <button @click="isProfileOpen = !isProfileOpen" class="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-lg transition-colors focus:outline-none">
-            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-teal-500" />
-            <div class="flex flex-col text-left">
-              <span class="text-[14px] font-bold text-slate-800 leading-tight">Dr. Sarah Jenkins</span>
-              <span class="text-[12px] text-slate-500 leading-tight">Chief Medical Officer</span>
-            </div>
-            <ChevronDown class="w-4 h-4 text-slate-400 ml-1" />
-          </button>
-          
-          <!-- Click outside overlay -->
-          <div v-if="isProfileOpen || isGenderOpen || isStatusOpen || isRangeOpen || isSortOpen" @click="isProfileOpen = false; isGenderOpen = false; isStatusOpen = false; isRangeOpen = false; isSortOpen = false" class="fixed inset-0 z-40"></div>
-          
-          <!-- Profile Dropdown -->
-          <div v-if="isProfileOpen" class="absolute top-[70px] right-8 w-[280px] bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden" style="animation: fadeIn 0.2s ease-in-out;">
-            <div class="p-5 border-b border-slate-100 relative">
-              <button @click="isProfileOpen = false" class="absolute top-3 right-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-full transition-colors group" title="Close">
-                <X class="w-4 h-4 group-hover:scale-110 transition-transform" />
-              </button>
-              <div class="flex flex-col items-center text-center mt-2">
-                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-teal-500 mb-3 shadow-sm" />
-                <span class="text-[16px] font-bold text-slate-800 leading-tight">Dr. Sarah Jenkins</span>
-                <span class="text-[13px] text-teal-600 font-medium leading-tight mt-1">Chief Medical Officer</span>
-                <span class="text-[12px] text-slate-500 mt-1">sarah.jenkins@dmr.hospital</span>
-              </div>
-            </div>
-            <div class="p-2">
-              <router-link to="/settings" class="flex items-center justify-between px-4 py-2.5 text-[14px] font-medium text-slate-600 hover:bg-slate-50 hover:text-teal-600 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                  <User class="w-4 h-4" />
-                  <span>Edit Profile</span>
-                </div>
-                <Edit class="w-4 h-4" />
-              </router-link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <!-- Main Scrollable Area -->
-      <main class="flex-1 px-8 py-8 overflow-y-auto bg-slate-50/60">
-        
-        <!-- ========================================================================= -->
-        <!-- VIEW 1: DEDICATED PATIENT MEDICAL DOSSIER VIEW (Full Page History) -->
-        <!-- ========================================================================= -->
+  <div class="px-8 py-8 bg-slate-50/60 min-h-full">
+    <!-- ========================================================================= -->
+    <!-- VIEW 1: DEDICATED PATIENT MEDICAL DOSSIER VIEW (Full Page History) -->
+    <!-- ========================================================================= -->
         <div v-if="selectedPatientId" class="space-y-6 animate-fade-in">
-          <!-- Back Navigation Bar -->
+          <!-- Back Navigation & Action Bar -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
             <button 
               @click="selectedPatientId = null" 
-              class="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors shadow-sm w-fit"
+              class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors shadow-xs w-fit"
             >
               <ArrowLeft class="w-4 h-4 text-teal-600" />
-              <span>Back to All Health Records</span>
+              <span>Back to Health Records</span>
             </button>
 
-            <button 
-              @click="openNewVisitForCurrentPatient" 
-              class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold text-sm transition-colors shadow-sm shadow-teal-100"
-            >
-              <Plus class="w-4 h-4" />
-              <span>Add New Record for this Patient</span>
-            </button>
+            <div class="flex items-center gap-3">
+              <button 
+                @click="printDossier" 
+                class="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-semibold text-sm transition-colors shadow-xs"
+                title="Print Patient Medical Summary"
+              >
+                <Printer class="w-4 h-4 text-slate-500" />
+                <span>Print Dossier</span>
+              </button>
+
+              <button 
+                @click="openNewVisitForCurrentPatient" 
+                class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-xs"
+              >
+                <Plus class="w-4 h-4" />
+                <span>Add New Record</span>
+              </button>
+            </div>
           </div>
 
-          <!-- Patient Profile Summary Card -->
-          <div v-if="currentPatientInfo" class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <!-- Professional Patient Summary Banner (EHR Standard) -->
+          <div v-if="currentPatientInfo" class="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-xs">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              
+              <!-- Patient Identification -->
               <div class="flex items-center gap-4">
-                <div class="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-2xl shadow-sm border border-teal-100 shrink-0">
+                <div class="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-2xl font-heading shadow-xs border border-teal-200 shrink-0">
                   {{ currentPatientInfo.patientName.charAt(0) }}
                 </div>
                 <div>
                   <div class="flex items-center gap-3 flex-wrap">
-                    <h2 class="text-2xl font-bold text-slate-900">{{ currentPatientInfo.patientName }}</h2>
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
-                      {{ currentPatientInfo.patientId }}
+                    <h2 class="text-2xl font-extrabold text-slate-900 font-heading tracking-tight">{{ currentPatientInfo.patientName }}</h2>
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200/80 font-mono">
+                      MRN: {{ currentPatientInfo.patientId }}
                     </span>
-                    <span :class="['px-2.5 py-0.5 rounded-full text-xs font-bold border', currentPatientInfo.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200']">
-                      {{ currentPatientInfo.status }}
+                    <span :class="['px-2.5 py-0.5 rounded-full text-xs font-bold border flex items-center gap-1.5', currentPatientInfo.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200']">
+                      <span class="w-1.5 h-1.5 rounded-full" :class="currentPatientInfo.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                      {{ currentPatientInfo.status }} Patient
                     </span>
                   </div>
-                  <p class="text-sm text-slate-500 font-medium mt-1">
-                    Gender: <span class="text-slate-700 font-semibold">{{ currentPatientInfo.gender }}</span>
-                    <span v-if="currentPatientInfo.dob"> &bull; Born: <span class="text-slate-700 font-semibold">{{ currentPatientInfo.dob }}</span></span>
-                  </p>
+                  <div class="flex items-center gap-2 text-xs text-slate-500 font-medium mt-1.5 flex-wrap">
+                    <span>Sex: <strong class="text-slate-700 font-semibold">{{ currentPatientInfo.gender }}</strong></span>
+                    <span class="text-slate-300">&bull;</span>
+                    <span v-if="currentPatientInfo.dob">DOB: <strong class="text-slate-700 font-semibold">{{ currentPatientInfo.dob }}</strong></span>
+                    <span v-if="currentPatientInfo.dob" class="text-slate-300">&bull;</span>
+                    <span>Primary Attending: <strong class="text-slate-700 font-semibold">{{ currentPatientInfo.attendingDoctor || 'Dr. Sarah Jenkins' }}</strong></span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Quick Stats Chips -->
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full md:w-auto">
-                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-100 min-w-[120px]">
-                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Visits</p>
-                  <p class="text-lg font-extrabold text-teal-700 mt-0.5">{{ currentPatientRecords.length }} Visits</p>
+              <!-- Quick Clinical Metrics Strip -->
+              <div class="grid grid-cols-3 gap-3 w-full lg:w-auto">
+                <div class="bg-slate-50/80 rounded-xl px-4 py-3 border border-slate-100 min-w-[110px]">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Encounters</p>
+                  <p class="text-base font-extrabold text-teal-700 mt-0.5">{{ currentPatientRecords.length }} Visits</p>
                 </div>
-                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-100 min-w-[120px]">
-                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Latest Visit</p>
-                  <p class="text-sm font-bold text-slate-800 mt-1">{{ currentPatientRecords[0]?.date || 'N/A' }}</p>
+                <div class="bg-slate-50/80 rounded-xl px-4 py-3 border border-slate-100 min-w-[110px]">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Last Evaluation</p>
+                  <p class="text-xs font-bold text-slate-800 mt-1">{{ currentPatientRecords[0]?.date || 'N/A' }}</p>
                 </div>
-                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-100 min-w-[120px] col-span-2 sm:col-span-1">
-                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Latest BP</p>
-                  <p class="text-sm font-bold text-slate-800 mt-1">{{ currentPatientRecords[0]?.bloodPressure || 'N/A' }} <span class="text-xs text-slate-400 font-normal">mmHg</span></p>
+                <div class="bg-slate-50/80 rounded-xl px-4 py-3 border border-slate-100 min-w-[110px]">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Latest Vitals</p>
+                  <p class="text-xs font-bold text-slate-800 mt-1">{{ currentPatientRecords[0]?.bloodPressure || 'N/A' }} <span class="text-[10px] text-slate-400 font-normal">mmHg</span></p>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Medical History Timeline List -->
+          <!-- Medical Encounters Section -->
           <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            
+            <!-- Section Header & Filter Pills -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+              <div class="flex items-center gap-2">
                 <Clock class="w-5 h-5 text-teal-600" />
-                <span>Medical History Timeline ({{ currentPatientRecords.length }} Records)</span>
-              </h3>
+                <h3 class="text-base font-extrabold text-slate-800 tracking-tight">
+                  Clinical Encounters History
+                </h3>
+                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                  {{ currentPatientRecords.length }}
+                </span>
+              </div>
+
+              <!-- Filter Pills -->
+              <div v-if="uniqueRecordTypes.length > 1" class="flex items-center gap-2 overflow-x-auto pb-1">
+                <button 
+                  @click="dossierTypeFilter = 'ALL'"
+                  :class="['px-3 py-1 rounded-lg text-xs font-bold transition-colors shadow-xs', dossierTypeFilter === 'ALL' ? 'bg-teal-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200']"
+                >
+                  All ({{ currentPatientRecords.length }})
+                </button>
+                <button 
+                  v-for="t in uniqueRecordTypes" 
+                  :key="t.name"
+                  @click="dossierTypeFilter = t.name"
+                  :class="['px-3 py-1 rounded-lg text-xs font-bold transition-colors shadow-xs', dossierTypeFilter === t.name ? 'bg-teal-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200']"
+                >
+                  {{ t.name }} ({{ t.count }})
+                </button>
+              </div>
             </div>
 
             <!-- Empty State for this patient -->
-            <div v-if="currentPatientRecords.length === 0" class="bg-white rounded-2xl p-12 text-center border border-slate-100">
+            <div v-if="filteredDossierRecords.length === 0" class="bg-white rounded-2xl p-12 text-center border border-slate-200/80">
               <FileText class="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p class="text-slate-600 font-medium">No health records recorded for this patient.</p>
-              <button @click="openNewVisitForCurrentPatient" class="mt-4 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors">
+              <button @click="openNewVisitForCurrentPatient" class="mt-4 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors shadow-xs">
                 Add First Record
               </button>
             </div>
 
-            <!-- History Cards (Newest to Oldest) -->
-            <div v-for="(record, index) in currentPatientRecords" :key="record.id" class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all hover:shadow-md">
-              <!-- Card Header -->
-              <div class="p-5 bg-slate-50/70 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="flex items-center gap-3 flex-wrap">
-                  <span class="px-3 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs tracking-wide">
-                    Visit #{{ currentPatientRecords.length - index }}
-                  </span>
-                  <span class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
-                    <CalendarDays class="w-4 h-4 text-teal-600" />
-                    {{ record.date }}
-                  </span>
-                  <span :class="['px-3 py-0.5 rounded-full text-xs font-bold border', getBadgeClass(record.recordType)]">
-                    {{ record.recordType }}
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-slate-500 mr-2 flex items-center gap-1">
-                    <User class="w-3.5 h-3.5 text-slate-400" />
-                    {{ record.attendingDoctor }}
-                  </span>
-                  <button @click="openEditModal(record)" class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-slate-200 hover:border-teal-300" title="Edit Record">
-                    <Edit class="w-4 h-4" />
-                  </button>
-                  <button @click="deleteRecord(record.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-slate-200 hover:border-rose-300" title="Delete Record">
-                    <Trash2 class="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <!-- Vitals Grid -->
-              <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-slate-100 bg-white">
-                <div class="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Blood Pressure</p>
-                  <p class="text-base font-extrabold text-slate-800 mt-1">
-                    {{ record.bloodPressure || 'N/A' }} <span class="text-xs font-medium text-slate-500">mmHg</span>
-                  </p>
-                </div>
-
-                <div class="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pulse Rate</p>
-                  <p class="text-base font-extrabold text-slate-800 mt-1">
-                    {{ record.pulse || 'N/A' }} <span class="text-xs font-medium text-slate-500">bpm</span>
-                  </p>
-                </div>
-
-                <div class="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Weight / Height</p>
-                  <p class="text-base font-extrabold text-slate-800 mt-1">
-                    {{ record.weightHeight || 'N/A' }}
-                  </p>
-                </div>
-
-                <div class="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">BMI Index</p>
-                  <div class="flex items-center gap-2 mt-1">
-                    <span :class="['px-2.5 py-0.5 font-extrabold text-xs rounded-md', getBmiClass(record.bmi)]">
-                      {{ record.bmi || 'N/A' }}
+            <!-- Connected History Timeline Cards (Newest to Oldest) -->
+            <div v-else class="space-y-4">
+              <div 
+                v-for="(record, index) in filteredDossierRecords" 
+                :key="record.id" 
+                class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden transition-all hover:border-slate-300"
+              >
+                <!-- Encounter Card Header -->
+                <div class="px-5 py-4 bg-slate-50/70 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 flex-wrap">
+                    <span class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 border border-teal-200/80 font-extrabold text-xs tracking-wide">
+                      Encounter #{{ currentPatientRecords.length - getRecordOriginalIndex(record.id) }}
+                    </span>
+                    <span class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                      <CalendarDays class="w-4 h-4 text-teal-600" />
+                      {{ record.date }}
+                    </span>
+                    <span :class="['px-3 py-0.5 rounded-full text-xs font-bold border', getBadgeClass(record.recordType)]">
+                      {{ record.recordType }}
+                    </span>
+                    <span v-if="getRecordOriginalIndex(record.id) === 0" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider">
+                      Latest Visit
                     </span>
                   </div>
+
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500 mr-2 flex items-center gap-1">
+                      <User class="w-3.5 h-3.5 text-slate-400" />
+                      {{ record.attendingDoctor }}
+                    </span>
+                    <button @click="openEditModal(record)" class="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-slate-200 hover:border-teal-300" title="Edit Record">
+                      <Edit class="w-3.5 h-3.5" />
+                    </button>
+                    <button @click="deleteRecord(record.id)" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-slate-200 hover:border-rose-300" title="Delete Record">
+                      <Trash2 class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Clinical Notes -->
-              <div v-if="record.note" class="p-5 border-b border-slate-100 bg-amber-50/30">
-                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <FileText class="w-3.5 h-3.5 text-amber-600" />
-                  Clinical Notes & Observations
-                </p>
-                <p class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap pl-1">{{ record.note }}</p>
-              </div>
-
-              <!-- Attachments Gallery -->
-              <div v-if="record.attachment_url && getAttachments(record.attachment_url).length > 0" class="p-5 bg-white">
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Lab Results & Documents</p>
-                <div class="flex flex-wrap gap-3">
-                  <template v-for="(fileUrl, fIdx) in getAttachments(record.attachment_url)" :key="fIdx">
-                    <div v-if="isImage(fileUrl)" class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:ring-2 hover:ring-teal-500 transition-all">
-                      <img :src="getFileUrl(fileUrl)" alt="Attachment" class="h-24 w-24 object-cover cursor-pointer" @click="openImagePreview(getFileUrl(fileUrl))" />
-                      <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
-                        <Eye class="w-5 h-5 text-white" />
-                      </div>
+                <!-- Clinical Vitals Parameters Grid -->
+                <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-slate-100 bg-white">
+                  
+                  <!-- BP -->
+                  <div class="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100">
+                    <div class="flex items-center justify-between">
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Blood Pressure</p>
+                      <HeartPulse class="w-3.5 h-3.5 text-rose-500" />
                     </div>
-                    <a v-else :href="getFileUrl(fileUrl)" target="_blank" class="px-4 py-2.5 bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-700 rounded-xl font-semibold text-xs flex items-center gap-2 border border-slate-200 hover:border-teal-300 transition-colors shadow-sm">
-                      <FileText class="w-4 h-4 text-teal-600" />
-                      <span>Document {{ fIdx + 1 }}</span>
-                      <Download class="w-3.5 h-3.5 text-slate-400 ml-1" />
-                    </a>
-                  </template>
+                    <p class="text-base font-extrabold text-slate-800 mt-1">
+                      {{ record.bloodPressure || 'N/A' }} <span class="text-xs font-normal text-slate-500">mmHg</span>
+                    </p>
+                    <p v-if="getBpComparison(record.id)" class="text-[11px] font-semibold text-slate-500 mt-1">
+                      {{ getBpComparison(record.id) }}
+                    </p>
+                  </div>
+
+                  <!-- Pulse -->
+                  <div class="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100">
+                    <div class="flex items-center justify-between">
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pulse Rate</p>
+                      <Activity class="w-3.5 h-3.5 text-teal-600" />
+                    </div>
+                    <p class="text-base font-extrabold text-slate-800 mt-1">
+                      {{ record.pulse || 'N/A' }} <span class="text-xs font-normal text-slate-500">bpm</span>
+                    </p>
+                  </div>
+
+                  <!-- Weight / Height -->
+                  <div class="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100">
+                    <div class="flex items-center justify-between">
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Weight / Height</p>
+                      <Scale class="w-3.5 h-3.5 text-indigo-500" />
+                    </div>
+                    <p class="text-base font-extrabold text-slate-800 mt-1">
+                      {{ record.weightHeight || 'N/A' }}
+                    </p>
+                    <p v-if="getWeightComparison(record.id)" class="text-[11px] font-semibold text-slate-500 mt-1">
+                      {{ getWeightComparison(record.id) }}
+                    </p>
+                  </div>
+
+                  <!-- BMI -->
+                  <div class="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100">
+                    <div class="flex items-center justify-between">
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">BMI Assessment</p>
+                      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" :class="getBadgeClass(getBmiLabel(record.bmi))">
+                        {{ getBmiLabel(record.bmi) }}
+                      </span>
+                    </div>
+                    <p class="text-base font-extrabold text-slate-800 mt-1">
+                      {{ record.bmi || 'N/A' }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Physician's Clinical Assessment Notes -->
+                <div v-if="record.note" class="p-5 border-b border-slate-100 bg-slate-50/40">
+                  <div class="border-l-4 border-teal-500 bg-white p-4 rounded-r-xl border border-l-0 border-slate-100 shadow-2xs">
+                    <p class="text-[11px] font-bold text-teal-800 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <FileText class="w-3.5 h-3.5 text-teal-600" />
+                      Physician's Clinical Assessment & Notes
+                    </p>
+                    <p class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap font-sans">{{ record.note }}</p>
+                  </div>
+                </div>
+
+                <!-- Attached Diagnostic Documents & Results -->
+                <div v-if="record.attachment_url && getAttachments(record.attachment_url).length > 0" class="p-5 bg-white">
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <FileCheck class="w-3.5 h-3.5 text-teal-600" />
+                    Attached Lab Results & Diagnostic Reports
+                  </p>
+                  <div class="flex flex-wrap gap-3 items-center">
+                    <template v-for="(fileUrl, fIdx) in getAttachments(record.attachment_url)" :key="fIdx">
+                      <div v-if="isImage(fileUrl)" class="flex flex-col gap-1 max-w-[100px]">
+                        <div class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-xs hover:ring-2 hover:ring-teal-500 transition-all">
+                          <img :src="getFileUrl(fileUrl)" alt="Attachment" class="h-20 w-20 object-cover cursor-pointer" @click="openImagePreview(getFileUrl(fileUrl))" />
+                          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+                            <Eye class="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                        <span class="text-[10px] font-medium text-slate-600 truncate text-center" :title="getOriginalFileName(fileUrl)">{{ getOriginalFileName(fileUrl) }}</span>
+                      </div>
+                      <a v-else :href="getFileUrl(fileUrl)" target="_blank" class="px-3.5 py-2 bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-700 rounded-xl font-semibold text-xs flex items-center gap-2 border border-slate-200 hover:border-teal-300 transition-colors shadow-2xs max-w-[260px]">
+                        <FileText class="w-4 h-4 text-teal-600 shrink-0" />
+                        <span class="truncate" :title="getOriginalFileName(fileUrl)">{{ getOriginalFileName(fileUrl) }}</span>
+                      </a>
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>
@@ -600,8 +637,9 @@
                         <a v-if="isImage(fileUrl)" href="#" @click.prevent="openImagePreview(getFileUrl(fileUrl))" class="block rounded-md overflow-hidden border border-slate-200 shadow-sm transition-all cursor-pointer">
                           <img :src="getFileUrl(fileUrl)" alt="Attachment" class="h-12 w-12 object-cover" />
                         </a>
-                        <a v-else :href="getFileUrl(fileUrl)" target="_blank" class="text-[11px] px-2 py-1 bg-slate-100 text-blue-600 hover:bg-slate-200 rounded flex items-center h-12 gap-1 transition-colors">
-                          <FileText class="w-3 h-3" /> File {{ index + 1 }}
+                        <a v-else :href="getFileUrl(fileUrl)" target="_blank" class="text-[11px] px-2.5 py-1.5 bg-slate-100 text-blue-600 hover:bg-slate-200 rounded flex items-center h-12 gap-1.5 transition-colors border border-slate-200 max-w-[180px]">
+                          <FileText class="w-3.5 h-3.5 shrink-0" />
+                          <span class="truncate" :title="getOriginalFileName(fileUrl)">{{ getOriginalFileName(fileUrl) }}</span>
                         </a>
                         <button type="button" @click.prevent="removeExistingAttachment(index)" class="absolute -top-1.5 -right-1.5 bg-white text-slate-400 hover:text-rose-500 rounded-full border border-slate-200 p-0.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                           <X class="w-3 h-3" />
@@ -638,18 +676,16 @@
           <img :src="previewImageUrl" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain ring-1 ring-white/20" alt="Preview" />
         </div>
       </div>
-    </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { api } from '../services/api'
 import { 
-  Activity, LayoutDashboard, Users, FileText, LogOut, Plus, Trash2, 
-  Search, HeartPulse, LineChart, CalendarCheck, Apple, Settings, 
-  ChevronDown, X, User, Edit, Eye, Download, ArrowLeft, Clock, CalendarDays 
+  Activity, Users, FileText, Plus, Trash2, 
+  Search, HeartPulse, LineChart, ChevronDown, X, User, Edit, Eye, Download, ArrowLeft, Clock, CalendarDays,
+  Printer, Scale, FileCheck
 } from 'lucide-vue-next'
 
 // TypeScript Interfaces for strict typing
@@ -679,17 +715,6 @@ interface HealthRecordForm extends Omit<HealthRecord, 'id'> {
   height?: string | number;
 }
 
-const router = useRouter()
-const username = ref('User') 
-const isProfileOpen = ref(false)
-
-const menuItems = ref([
-  { name: 'Dashboard', path: '/dashboard', icon: LineChart },
-  { name: 'Manage Patients', path: '/patients', icon: Users },
-  { name: 'Health Records', path: '/health-records', icon: FileText },
-  { name: 'Settings', path: '/settings', icon: Settings }
-])
-
 // Dropdown state
 const isGenderOpen = ref(false)
 const filterGender = ref('(All)')
@@ -703,6 +728,7 @@ const searchQuery = ref('')
 
 // State for Dedicated Patient Dossier View
 const selectedPatientId = ref<string | null>(null)
+const dossierTypeFilter = ref<string>('ALL')
 
 // Modal states
 const isAddModalOpen = ref(false)
@@ -713,6 +739,7 @@ const editingRecordId = ref<string | null>(null)
 // Navigate into Dedicated Patient Dossier View
 const viewPatientDossier = (patientId: string) => {
   selectedPatientId.value = patientId
+  dossierTypeFilter.value = 'ALL'
 }
 
 // Filter all records belonging to the selected patient (newest to oldest)
@@ -722,6 +749,80 @@ const currentPatientRecords = computed(() => {
     .filter(r => r.patientId === selectedPatientId.value || r.patientName.toLowerCase() === selectedPatientId.value?.toLowerCase())
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 })
+
+// Filtered dossier records based on pill filter
+const filteredDossierRecords = computed(() => {
+  if (dossierTypeFilter.value === 'ALL') {
+    return currentPatientRecords.value
+  }
+  return currentPatientRecords.value.filter(r => r.recordType === dossierTypeFilter.value)
+})
+
+// Extract unique record types with counts for the patient
+const uniqueRecordTypes = computed(() => {
+  const map = new Map<string, number>()
+  currentPatientRecords.value.forEach(r => {
+    map.set(r.recordType, (map.get(r.recordType) || 0) + 1)
+  })
+  return Array.from(map.entries()).map(([name, count]) => ({ name, count }))
+})
+
+// Find index of record in the full patient records list
+const getRecordOriginalIndex = (id: string) => {
+  return currentPatientRecords.value.findIndex(r => r.id === id)
+}
+
+// Compare systolic BP with the previous visit in chronological order
+const getBpComparison = (id: string) => {
+  const idx = getRecordOriginalIndex(id)
+  if (idx < 0 || idx >= currentPatientRecords.value.length - 1) return null
+  const currentRecord = currentPatientRecords.value[idx]
+  const prevRecord = currentPatientRecords.value[idx + 1]
+  
+  if (!currentRecord?.bloodPressure || !prevRecord?.bloodPressure) return null
+  const curSys = parseInt(currentRecord.bloodPressure.split('/')[0] || '0')
+  const prevSys = parseInt(prevRecord.bloodPressure.split('/')[0] || '0')
+  
+  if (!curSys || !prevSys) return null
+  const diff = curSys - prevSys
+  if (diff < 0) return `${Math.abs(diff)} mmHg lower vs prev`
+  if (diff > 0) return `+${diff} mmHg vs prev`
+  return `Same as prev visit`
+}
+
+// Compare weight with previous visit
+const getWeightComparison = (id: string) => {
+  const idx = getRecordOriginalIndex(id)
+  if (idx < 0 || idx >= currentPatientRecords.value.length - 1) return null
+  const currentRecord = currentPatientRecords.value[idx]
+  const prevRecord = currentPatientRecords.value[idx + 1]
+  
+  if (!currentRecord?.weight || !prevRecord?.weight) return null
+  const curW = parseFloat(currentRecord.weight.toString())
+  const prevW = parseFloat(prevRecord.weight.toString())
+  
+  if (isNaN(curW) || isNaN(prevW)) return null
+  const diff = (curW - prevW).toFixed(1)
+  const numDiff = parseFloat(diff)
+  if (numDiff > 0) return `+${numDiff} kg vs prev`
+  if (numDiff < 0) return `${numDiff} kg vs prev`
+  return `Weight unchanged`
+}
+
+// BMI label
+const getBmiLabel = (bmiStr: string) => {
+  const bmi = parseFloat(bmiStr)
+  if (isNaN(bmi)) return 'Unknown'
+  if (bmi < 18.5) return 'Underweight'
+  if (bmi >= 18.5 && bmi < 25) return 'Normal'
+  if (bmi >= 25 && bmi < 30) return 'Overweight'
+  return 'Obese'
+}
+
+// Print patient dossier
+const printDossier = () => {
+  window.print()
+}
 
 // Current patient profile metadata
 const currentPatientInfo = computed(() => {
@@ -1012,6 +1113,16 @@ const isImage = (url: string) => {
   return url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
 }
 
+const getOriginalFileName = (url: string) => {
+  if (!url) return 'File'
+  const base = url.split('/').pop() || ''
+  const underscoreIndex = base.indexOf('_')
+  if (underscoreIndex !== -1 && underscoreIndex < base.length - 1) {
+    return decodeURIComponent(base.substring(underscoreIndex + 1))
+  }
+  return decodeURIComponent(base)
+}
+
 // Modal Actions
 const openAddModal = () => {
   editingRecordId.value = null
@@ -1205,28 +1316,6 @@ const saveRecord = async () => {
     fetchRecords(); // Refresh the list from the database
   } catch (error) {
     console.error("Save failed", error);
-  }
-}
-
-const userInitial = computed(() => {
-  return username.value ? username.value.charAt(0).toUpperCase() : 'U'
-})
-
-onMounted(() => {
-  const storedName = localStorage.getItem('username')
-  if (storedName) {
-    username.value = storedName
-  }
-})
-
-const handleLogout = async () => {
-  try {
-    await api.post('/api/auth/logout', {});
-  } catch (error: any) {
-    console.error('Logout error:', error);
-  } finally {
-    localStorage.removeItem('username');
-    router.push('/');
   }
 }
 </script>

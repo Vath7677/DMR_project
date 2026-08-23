@@ -1,52 +1,9 @@
 <template>
-  <div class="flex-1 flex flex-col h-full overflow-hidden">
-    <header class="h-[76px] bg-white border-b border-slate-100 flex items-center justify-end px-8 z-50 relative">
-        <div class="flex items-center">
-          <button @click="isProfileOpen = !isProfileOpen" class="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-lg transition-colors focus:outline-none">
-            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-teal-500" />
-            <div class="flex flex-col text-left">
-              <span class="text-[14px] font-bold text-slate-800 leading-tight">Dr. Sarah Jenkins</span>
-              <span class="text-[12px] text-slate-500 leading-tight">Chief Medical Officer</span>
-            </div>
-            <ChevronDown class="w-4 h-4 text-slate-400 ml-1" />
-          </button>
-          
-          <!-- Click outside overlay -->
-          <div v-if="isProfileOpen" @click="isProfileOpen = false" class="fixed inset-0 z-40"></div>
-          
-          <!-- Profile Dropdown -->
-          <div v-if="isProfileOpen" class="absolute top-[70px] right-8 w-[280px] bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden" style="animation: fadeIn 0.2s ease-in-out;">
-            <div class="p-5 border-b border-slate-100 relative">
-              <button @click="isProfileOpen = false" class="absolute top-3 right-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-full transition-colors group" title="Close">
-                <X class="w-4 h-4 group-hover:scale-110 transition-transform" />
-              </button>
-              <div class="flex flex-col items-center text-center mt-2">
-                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80" alt="Doctor Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-teal-500 mb-3 shadow-sm" />
-                <span class="text-[16px] font-bold text-slate-800 leading-tight">Dr. Sarah Jenkins</span>
-                <span class="text-[13px] text-teal-600 font-medium leading-tight mt-1">Chief Medical Officer</span>
-                <span class="text-[12px] text-slate-500 mt-1">sarah.jenkins@dmr.hospital</span>
-              </div>
-            </div>
-            <div class="p-2">
-              <router-link to="/settings" class="flex items-center justify-between px-4 py-2.5 text-[14px] font-medium text-slate-600 hover:bg-slate-50 hover:text-teal-600 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                  <User class="w-4 h-4" />
-                  <span>Edit Profile</span>
-                </div>
-                <Edit class="w-4 h-4" />
-              </router-link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <!-- Content Area -->
-      <main class="flex-1 px-8 py-8 overflow-y-auto bg-slate-50/60">
-        
-        <div class="mb-6">
-          <h1 class="text-[24px] font-heading font-bold text-slate-900 tracking-tight">Admin Dashboard / Patient Management System</h1>
-          <p class="text-[14px] text-slate-500 mt-1 font-medium">Overview of healthcare operations, patient volume, and recent activities.</p>
-        </div>
+  <div class="px-8 py-8 bg-slate-50/60 min-h-full">
+    <div class="mb-6">
+      <h1 class="text-[24px] font-heading font-bold text-slate-900 tracking-tight">Patient Management System</h1>
+      <p class="text-[14px] text-slate-500 mt-1 font-medium">Overview of healthcare operations, patient volume, and recent activities.</p>
+    </div>
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
@@ -204,17 +161,13 @@
               </div>
             </div>
           </div>
-        </div>
-
-      </main>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { api } from '../services/api'
-import { Activity, LayoutDashboard, Users, FileText, LogOut, TrendingUp, Stethoscope, Search, HeartPulse, LineChart, CalendarCheck, Apple, FilePlus, Check, Calendar, UserPlus, Settings, ChevronDown, X, User, Edit } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { Users, TrendingUp, HeartPulse, CalendarCheck, Apple, Calendar, UserPlus } from 'lucide-vue-next'
 
 import { Bar } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
@@ -290,39 +243,6 @@ const chartOptions = {
         color: '#e2e8f0' // slate-200
       }
     }
-  }
-}
-
-const router = useRouter()
-const username = ref('User') 
-const isProfileOpen = ref(false)
-
-const menuItems = ref([
-  { name: 'Dashboard', path: '/dashboard', icon: LineChart },
-  { name: 'Manage Patients', path: '/patients', icon: Users },
-  { name: 'Health Records', path: '/health-records', icon: FileText },
-  { name: 'Settings', path: '/settings', icon: Settings }
-])
-
-const userInitial = computed(() => {
-  return username.value ? username.value.charAt(0).toUpperCase() : 'U'
-})
-
-onMounted(() => {
-  const storedName = localStorage.getItem('username')
-  if (storedName) {
-    username.value = storedName
-  }
-})
-
-const handleLogout = async () => {
-  try {
-    await api.post('/api/auth/logout', {});
-  } catch (error: any) {
-    console.error('Logout error:', error);
-  } finally {
-    localStorage.removeItem('username');
-    router.push('/');
   }
 }
 </script>
