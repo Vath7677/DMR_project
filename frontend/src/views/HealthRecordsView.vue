@@ -41,256 +41,335 @@
         </div>
       </header>
 
-      <!-- Content Area -->
+      <!-- Main Scrollable Area -->
       <main class="flex-1 px-8 py-8 overflow-y-auto bg-slate-50/60">
         
-        <div class="mb-6 flex justify-between items-end">
-          <div>
-            <h1 class="text-[24px] font-heading font-bold text-slate-900 tracking-tight">Health Records</h1>
-            <p class="text-[14px] text-slate-500 mt-1 font-medium">Manage clinical notes, lab results, and patient documents.</p>
+        <!-- ========================================================================= -->
+        <!-- VIEW 1: DEDICATED PATIENT MEDICAL DOSSIER VIEW (Full Page History) -->
+        <!-- ========================================================================= -->
+        <div v-if="selectedPatientId" class="space-y-6 animate-fade-in">
+          <!-- Back Navigation Bar -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+            <button 
+              @click="selectedPatientId = null" 
+              class="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors shadow-sm w-fit"
+            >
+              <ArrowLeft class="w-4 h-4 text-teal-600" />
+              <span>Back to All Health Records</span>
+            </button>
+
+            <button 
+              @click="openNewVisitForCurrentPatient" 
+              class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold text-sm transition-colors shadow-sm shadow-teal-100"
+            >
+              <Plus class="w-4 h-4" />
+              <span>Add New Record for this Patient</span>
+            </button>
           </div>
-          <button @click="openAddModal" class="flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-semibold text-sm hover:bg-teal-700 transition-colors shadow-sm">
-            <Plus class="w-4 h-4" />
-            <span>Add Health Record</span>
-          </button>
-        </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-          <!-- Table Header Options -->
-          <div class="p-6 border-b border-slate-100 bg-white">
-            <div class="flex flex-col md:flex-row gap-4 items-end justify-between">
-              <!-- Search Bar -->
-              <div class="relative w-full md:w-[400px] flex-none">
-                <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input type="text" v-model="searchQuery" placeholder="Search patients by name, ID, or phone..." class="w-full py-2.5 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none focus:border-teal-500 focus:bg-white shadow-sm transition-colors" />
+          <!-- Patient Profile Summary Card -->
+          <div v-if="currentPatientInfo" class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-2xl shadow-sm border border-teal-100 shrink-0">
+                  {{ currentPatientInfo.patientName.charAt(0) }}
+                </div>
+                <div>
+                  <div class="flex items-center gap-3 flex-wrap">
+                    <h2 class="text-2xl font-bold text-slate-900">{{ currentPatientInfo.patientName }}</h2>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                      {{ currentPatientInfo.patientId }}
+                    </span>
+                    <span :class="['px-2.5 py-0.5 rounded-full text-xs font-bold border', currentPatientInfo.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200']">
+                      {{ currentPatientInfo.status }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-slate-500 font-medium mt-1">
+                    Gender: <span class="text-slate-700 font-semibold">{{ currentPatientInfo.gender }}</span>
+                    <span v-if="currentPatientInfo.dob"> &bull; Born: <span class="text-slate-700 font-semibold">{{ currentPatientInfo.dob }}</span></span>
+                  </p>
+                </div>
               </div>
-              
-              <div class="flex flex-wrap gap-4">
-                
-                <!-- Custom Gender Dropdown -->
-                <div class="flex flex-col gap-1 relative">
-                  <label class="text-[12px] font-semibold text-slate-700">Gender</label>
-                  <button @click="isGenderOpen = !isGenderOpen; isStatusOpen = false; isRangeOpen = false; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
-                    <span class="truncate block w-full">{{ filterGender }}</span>
-                    <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isGenderOpen}" />
-                  </button>
-                  <div v-if="isGenderOpen" class="absolute top-[68px] left-0 w-full bg-white border border-slate-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
-                    <div @click="filterGender = '(All)'; isGenderOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterGender === '(All)'}">(All)</div>
-                    <div @click="filterGender = 'Male'; isGenderOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterGender === 'Male'}">Male</div>
-                    <div @click="filterGender = 'Female'; isGenderOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterGender === 'Female'}">Female</div>
-                  </div>
-                </div>
 
-                <!-- Custom Status Dropdown -->
-                <div class="flex flex-col gap-1 relative">
-                  <label class="text-[12px] font-semibold text-slate-700">Status</label>
-                  <button @click="isStatusOpen = !isStatusOpen; isGenderOpen = false; isRangeOpen = false; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
-                    <span class="truncate block w-full">{{ filterStatus }}</span>
-                    <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isStatusOpen}" />
-                  </button>
-                  <div v-if="isStatusOpen" class="absolute top-[68px] left-0 w-full bg-white border border-slate-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
-                    <div @click="filterStatus = 'Active'; isStatusOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterStatus === 'Active'}">Active</div>
-                    <div @click="filterStatus = 'Inactive'; isStatusOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterStatus === 'Inactive'}">Inactive</div>
-                  </div>
+              <!-- Quick Stats Chips -->
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full md:w-auto">
+                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-100 min-w-[120px]">
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Visits</p>
+                  <p class="text-lg font-extrabold text-teal-700 mt-0.5">{{ currentPatientRecords.length }} Visits</p>
                 </div>
-
-                <!-- Custom Range Dropdown -->
-                <div class="flex flex-col gap-1 relative">
-                  <label class="text-[12px] font-semibold text-slate-700">Last Visited</label>
-                  <button @click="isRangeOpen = !isRangeOpen; isGenderOpen = false; isStatusOpen = false; isSortOpen = false" class="relative w-[130px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
-                    <span class="truncate block w-full">{{ filterRange }}</span>
-                    <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isRangeOpen}" />
-                  </button>
-                  <div v-if="isRangeOpen" class="absolute top-[68px] right-0 w-full bg-white border border-slate-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
-                    <div @click="filterRange = '(Last Month)'; isRangeOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterRange === '(Last Month)'}">(Last Month)</div>
-                    <div @click="filterRange = '(Last 3 Months)'; isRangeOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterRange === '(Last 3 Months)'}">(Last 3 Months)</div>
-                    <div @click="filterRange = '(Last Year)'; isRangeOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterRange === '(Last Year)'}">(Last Year)</div>
-                  </div>
+                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-100 min-w-[120px]">
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Latest Visit</p>
+                  <p class="text-sm font-bold text-slate-800 mt-1">{{ currentPatientRecords[0]?.date || 'N/A' }}</p>
                 </div>
-
-                <!-- Custom Sort Dropdown -->
-                <div class="flex flex-col gap-1 relative">
-                  <label class="text-[12px] font-semibold text-slate-700">Sort By</label>
-                  <button @click="isSortOpen = !isSortOpen; isGenderOpen = false; isStatusOpen = false; isRangeOpen = false" class="relative w-[140px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
-                    <span class="truncate block w-full">{{ currentSort }}</span>
-                    <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isSortOpen}" />
-                  </button>
-                  <div v-if="isSortOpen" class="absolute top-[68px] right-0 w-[160px] bg-white border border-slate-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
-                    <div @click="currentSort = 'Newest First'; isSortOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': currentSort === 'Newest First'}">Newest First</div>
-                    <div @click="currentSort = 'Oldest First'; isSortOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': currentSort === 'Oldest First'}">Oldest First</div>
-                    <div @click="currentSort = 'Name (A to Z)'; isSortOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': currentSort === 'Name (A to Z)'}">Name (A to Z)</div>
-                    <div @click="currentSort = 'Name (Z to A)'; isSortOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': currentSort === 'Name (Z to A)'}">Name (Z to A)</div>
-                  </div>
+                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-100 min-w-[120px] col-span-2 sm:col-span-1">
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Latest BP</p>
+                  <p class="text-sm font-bold text-slate-800 mt-1">{{ currentPatientRecords[0]?.bloodPressure || 'N/A' }} <span class="text-xs text-slate-400 font-normal">mmHg</span></p>
                 </div>
-
               </div>
             </div>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse whitespace-nowrap">
-              <thead class="bg-slate-800 text-white">
-                <tr>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Date</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Patient</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Record Type</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Blood Pressure</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Pulse</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Weight / Height</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">BMI</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Attending Doctor</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                <tr v-for="record in filteredRecords" :key="record.id" class="hover:bg-slate-50/50 transition-colors">
-                  <td class="px-6 py-5 text-sm text-slate-600">{{ record.date }}</td>
-                  <td class="px-6 py-5">
-                    <div class="font-bold text-slate-800 text-sm">{{ record.patientName }}</div>
-                    <div class="text-xs text-slate-500 mt-0.5">({{ record.patientId }})</div>
-                  </td>
-                  <td class="px-6 py-5">
-                    <span :class="['px-3 py-1 rounded-full text-xs font-bold border', getBadgeClass(record.recordType)]">{{ record.recordType }}</span>
-                  </td>
-                  <td class="px-6 py-5 text-sm text-slate-600"><span class="font-bold text-slate-800">{{ record.bloodPressure.split('/')[0] }}/{{ record.bloodPressure.split('/')[1] || '' }}</span> mmHg</td>
-                  <td class="px-6 py-5 text-sm text-slate-600">{{ record.pulse }} bpm</td>
-                  <td class="px-6 py-5 text-sm text-slate-600">{{ record.weightHeight }}</td>
-                  <td class="px-6 py-5"><span :class="['px-2 py-1 font-bold text-xs rounded-md', getBmiClass(record.bmi)]">{{ record.bmi }}</span></td>
-                  <td class="px-6 py-5 text-sm text-slate-600">{{ record.attendingDoctor }}</td>
-                  <td class="px-6 py-5 text-center">
-                    <div class="flex items-center justify-center gap-2">
-                      <button @click="openViewModal(record)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100" title="View Details">
-                        <Eye class="w-4 h-4" />
-                      </button>
-                      <button @click="openEditModal(record)" class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-transparent hover:border-teal-100" title="Edit">
-                        <Edit class="w-4 h-4" />
-                      </button>
-                      <button @click="deleteRecord(record.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100" title="Delete">
-                        <Trash2 class="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                
-                <!-- Empty State -->
-                <tr v-if="filteredRecords.length === 0">
-                  <td colspan="9" class="px-6 py-12 text-center">
-                    <div class="flex flex-col items-center justify-center text-slate-400">
-                      <FileText class="w-12 h-12 mb-3 text-slate-300" />
-                      <p class="text-[15px] font-medium text-slate-600">No health records found</p>
-                      <p class="text-[13px] mt-1">Try adjusting your filters or search query.</p>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <!-- Medical History Timeline List -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Clock class="w-5 h-5 text-teal-600" />
+                <span>Medical History Timeline ({{ currentPatientRecords.length }} Records)</span>
+              </h3>
+            </div>
 
-        <!-- View Health Record Modal -->
-        <div v-if="isViewModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center">
-          <div class="absolute inset-0 bg-slate-900/40" @click="isViewModalOpen = false"></div>
-          
-          <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up mx-4">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
-              <h3 class="text-lg font-bold text-slate-800">Patient Medical History</h3>
-              <button @click="isViewModalOpen = false" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
-                <X class="w-5 h-5" />
+            <!-- Empty State for this patient -->
+            <div v-if="currentPatientRecords.length === 0" class="bg-white rounded-2xl p-12 text-center border border-slate-100">
+              <FileText class="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p class="text-slate-600 font-medium">No health records recorded for this patient.</p>
+              <button @click="openNewVisitForCurrentPatient" class="mt-4 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors">
+                Add First Record
               </button>
             </div>
-            
-            <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50/30">
-              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shadow-sm shrink-0">
-                    <Activity class="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 class="text-lg font-bold text-slate-800">{{ viewingRecord?.patientName }}</h3>
-                    <p class="text-[13px] text-slate-500 font-medium mt-0.5">
-                      ID: {{ viewingRecord?.patientId }} &bull; {{ viewingRecord?.gender }} 
-                      <span v-if="viewingRecord?.dob">&bull; Born {{ viewingRecord?.dob }}</span>
-                    </p>
-                  </div>
+
+            <!-- History Cards (Newest to Oldest) -->
+            <div v-for="(record, index) in currentPatientRecords" :key="record.id" class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all hover:shadow-md">
+              <!-- Card Header -->
+              <div class="p-5 bg-slate-50/70 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3 flex-wrap">
+                  <span class="px-3 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs tracking-wide">
+                    Visit #{{ currentPatientRecords.length - index }}
+                  </span>
+                  <span class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <CalendarDays class="w-4 h-4 text-teal-600" />
+                    {{ record.date }}
+                  </span>
+                  <span :class="['px-3 py-0.5 rounded-full text-xs font-bold border', getBadgeClass(record.recordType)]">
+                    {{ record.recordType }}
+                  </span>
                 </div>
-                <button @click="openNewVisitFromHistory" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg transition-colors shadow-sm shadow-teal-200 flex items-center gap-2">
-                  <Plus class="w-4 h-4" /> Add New Record
-                </button>
+
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-slate-500 mr-2 flex items-center gap-1">
+                    <User class="w-3.5 h-3.5 text-slate-400" />
+                    {{ record.attendingDoctor }}
+                  </span>
+                  <button @click="openEditModal(record)" class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-slate-200 hover:border-teal-300" title="Edit Record">
+                    <Edit class="w-4 h-4" />
+                  </button>
+                  <button @click="deleteRecord(record.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-slate-200 hover:border-rose-300" title="Delete Record">
+                    <Trash2 class="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div class="space-y-4">
-                <div v-for="record in patientHistory" :key="record.id" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                  <div class="grid grid-cols-2">
-                    <!-- Date -->
-                    <div class="p-4 border-b border-r border-slate-100">
-                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date</p>
-                      <p class="text-[13px] font-bold text-slate-800">{{ record.date }}</p>
-                    </div>
-                    <!-- Record Type -->
-                    <div class="p-4 border-b border-slate-100 flex flex-col items-start">
-                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Record Type</p>
-                      <span :class="['px-2 py-0.5 rounded-full text-[11px] font-bold border inline-block', getBadgeClass(record.recordType)]">{{ record.recordType }}</span>
-                    </div>
-                    <!-- Blood Pressure -->
-                    <div class="p-4 border-b border-r border-slate-100">
-                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Blood Pressure</p>
-                      <p class="text-[13px] font-bold text-slate-800">
-                        {{ record.bloodPressure }} <span class="font-medium text-slate-500">mmHg</span>
-                      </p>
-                    </div>
-                    <!-- Pulse -->
-                    <div class="p-4 border-b border-slate-100">
-                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pulse</p>
-                      <p class="text-[13px] font-bold text-slate-800">
-                        {{ record.pulse }} <span class="font-medium text-slate-500">bpm</span>
-                      </p>
-                    </div>
-                    <!-- Weight / Height -->
-                    <div class="p-4 border-r border-slate-100">
-                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Weight / Height</p>
-                      <p class="text-[13px] font-bold text-slate-800">{{ record.weightHeight }}</p>
-                    </div>
-                    <!-- BMI -->
-                    <div class="p-4 flex flex-col items-start">
-                      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">BMI</p>
-                      <span :class="['px-2 py-0.5 font-bold text-[11px] rounded inline-block', getBmiClass(record.bmi)]">{{ record.bmi }}</span>
-                    </div>
+              <!-- Vitals Grid -->
+              <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-slate-100 bg-white">
+                <div class="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Blood Pressure</p>
+                  <p class="text-base font-extrabold text-slate-800 mt-1">
+                    {{ record.bloodPressure || 'N/A' }} <span class="text-xs font-medium text-slate-500">mmHg</span>
+                  </p>
+                </div>
+
+                <div class="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pulse Rate</p>
+                  <p class="text-base font-extrabold text-slate-800 mt-1">
+                    {{ record.pulse || 'N/A' }} <span class="text-xs font-medium text-slate-500">bpm</span>
+                  </p>
+                </div>
+
+                <div class="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Weight / Height</p>
+                  <p class="text-base font-extrabold text-slate-800 mt-1">
+                    {{ record.weightHeight || 'N/A' }}
+                  </p>
+                </div>
+
+                <div class="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">BMI Index</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span :class="['px-2.5 py-0.5 font-extrabold text-xs rounded-md', getBmiClass(record.bmi)]">
+                      {{ record.bmi || 'N/A' }}
+                    </span>
                   </div>
-                  <!-- Attending Doctor -->
-                  <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Attending Doctor</p>
-                    <div class="flex items-center gap-2">
-                      <User class="w-4 h-4 text-slate-400" />
-                      <p class="text-[13px] font-bold text-slate-800">{{ record.attendingDoctor }}</p>
+                </div>
+              </div>
+
+              <!-- Clinical Notes -->
+              <div v-if="record.note" class="p-5 border-b border-slate-100 bg-amber-50/30">
+                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <FileText class="w-3.5 h-3.5 text-amber-600" />
+                  Clinical Notes & Observations
+                </p>
+                <p class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap pl-1">{{ record.note }}</p>
+              </div>
+
+              <!-- Attachments Gallery -->
+              <div v-if="record.attachment_url && getAttachments(record.attachment_url).length > 0" class="p-5 bg-white">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Lab Results & Documents</p>
+                <div class="flex flex-wrap gap-3">
+                  <template v-for="(fileUrl, fIdx) in getAttachments(record.attachment_url)" :key="fIdx">
+                    <div v-if="isImage(fileUrl)" class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:ring-2 hover:ring-teal-500 transition-all">
+                      <img :src="getFileUrl(fileUrl)" alt="Attachment" class="h-24 w-24 object-cover cursor-pointer" @click="openImagePreview(getFileUrl(fileUrl))" />
+                      <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+                        <Eye class="w-5 h-5 text-white" />
+                      </div>
                     </div>
-                  </div>
-                  <!-- Note -->
-                  <div v-if="record.note" class="px-4 py-3 bg-white border-t border-slate-100">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Note / Information</p>
-                    <p class="text-[13px] text-slate-700 whitespace-pre-wrap">{{ record.note }}</p>
-                  </div>
-                  <!-- Attachment -->
-                  <div v-if="record.attachment_url && getAttachments(record.attachment_url).length > 0" class="px-4 py-3 bg-white border-t border-slate-100 flex flex-col justify-between">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Attachments</p>
-                    <div class="flex flex-wrap gap-3">
-                      <template v-for="(fileUrl, index) in getAttachments(record.attachment_url)" :key="index">
-                        <a v-if="isImage(fileUrl)" href="#" @click.prevent="openImagePreview(getFileUrl(fileUrl))" class="block rounded-lg overflow-hidden border border-slate-200 shadow-sm hover:ring-2 hover:ring-teal-500 transition-all cursor-pointer">
-                          <img :src="getFileUrl(fileUrl)" alt="Attachment" class="h-20 w-20 object-cover" />
-                        </a>
-                        <a v-else :href="getFileUrl(fileUrl)" target="_blank" class="text-[12px] px-3 py-1.5 h-10 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md font-semibold flex items-center gap-1.5 transition-colors border border-blue-100">
-                          <FileText class="w-3.5 h-3.5" /> File {{ index + 1 }}
-                        </a>
-                      </template>
-                    </div>
-                  </div>
+                    <a v-else :href="getFileUrl(fileUrl)" target="_blank" class="px-4 py-2.5 bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-700 rounded-xl font-semibold text-xs flex items-center gap-2 border border-slate-200 hover:border-teal-300 transition-colors shadow-sm">
+                      <FileText class="w-4 h-4 text-teal-600" />
+                      <span>Document {{ fIdx + 1 }}</span>
+                      <Download class="w-3.5 h-3.5 text-slate-400 ml-1" />
+                    </a>
+                  </template>
                 </div>
               </div>
             </div>
-            
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end">
-              <button @click="isViewModalOpen = false" class="px-5 py-2 text-[13px] font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors shadow-sm focus:outline-none">
-                Done
-              </button>
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- VIEW 2: MAIN ALL HEALTH RECORDS TABLE (Default Overview) -->
+        <!-- ========================================================================= -->
+        <div v-else class="space-y-6">
+          <div class="flex justify-between items-end">
+            <div>
+              <h1 class="text-[24px] font-heading font-bold text-slate-900 tracking-tight">Health Records</h1>
+              <p class="text-[14px] text-slate-500 mt-1 font-medium">Manage clinical notes, lab results, and patient documents.</p>
+            </div>
+            <button @click="openAddModal" class="flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-semibold text-sm hover:bg-teal-700 transition-colors shadow-sm">
+              <Plus class="w-4 h-4" />
+              <span>Add Health Record</span>
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+            <!-- Table Header Options -->
+            <div class="p-6 border-b border-slate-100 bg-white">
+              <div class="flex flex-col md:flex-row gap-4 items-end justify-between">
+                <!-- Search Bar -->
+                <div class="relative w-full md:w-[400px] flex-none">
+                  <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input type="text" v-model="searchQuery" placeholder="Search patients by name, ID, or phone..." class="w-full py-2.5 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none focus:border-teal-500 focus:bg-white shadow-sm transition-colors" />
+                </div>
+                
+                <div class="flex flex-wrap gap-4">
+                  
+                  <!-- Custom Gender Dropdown -->
+                  <div class="flex flex-col gap-1 relative">
+                    <label class="text-[12px] font-semibold text-slate-700">Gender</label>
+                    <button @click="isGenderOpen = !isGenderOpen; isStatusOpen = false; isRangeOpen = false; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                      <span class="truncate block w-full">{{ filterGender }}</span>
+                      <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isGenderOpen}" />
+                    </button>
+                    <div v-if="isGenderOpen" class="absolute top-[68px] left-0 w-full bg-white border border-slate-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
+                      <div @click="filterGender = '(All)'; isGenderOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterGender === '(All)'}">(All)</div>
+                      <div @click="filterGender = 'Male'; isGenderOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterGender === 'Male'}">Male</div>
+                      <div @click="filterGender = 'Female'; isGenderOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterGender === 'Female'}">Female</div>
+                    </div>
+                  </div>
+
+                  <!-- Custom Status Dropdown -->
+                  <div class="flex flex-col gap-1 relative">
+                    <label class="text-[12px] font-semibold text-slate-700">Status</label>
+                    <button @click="isStatusOpen = !isStatusOpen; isGenderOpen = false; isRangeOpen = false; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                      <span class="truncate block w-full">{{ filterStatus }}</span>
+                      <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isStatusOpen}" />
+                    </button>
+                    <div v-if="isStatusOpen" class="absolute top-[68px] left-0 w-full bg-white border border-slate-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
+                      <div @click="filterStatus = 'Active'; isStatusOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterStatus === 'Active'}">Active</div>
+                      <div @click="filterStatus = 'Inactive'; isStatusOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterStatus === 'Inactive'}">Inactive</div>
+                    </div>
+                  </div>
+
+                  <!-- Custom Range Dropdown -->
+                  <div class="flex flex-col gap-1 relative">
+                    <label class="text-[12px] font-semibold text-slate-700">Last Visited</label>
+                    <button @click="isRangeOpen = !isRangeOpen; isGenderOpen = false; isStatusOpen = false; isSortOpen = false" class="relative w-[130px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                      <span class="truncate block w-full">{{ filterRange }}</span>
+                      <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isRangeOpen}" />
+                    </button>
+                    <div v-if="isRangeOpen" class="absolute top-[68px] right-0 w-full bg-white border border-slate-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
+                      <div @click="filterRange = '(Last Month)'; isRangeOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterRange === '(Last Month)'}">(Last Month)</div>
+                      <div @click="filterRange = '(Last 3 Months)'; isRangeOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterRange === '(Last 3 Months)'}">(Last 3 Months)</div>
+                      <div @click="filterRange = '(Last Year)'; isRangeOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': filterRange === '(Last Year)'}">(Last Year)</div>
+                    </div>
+                  </div>
+
+                  <!-- Custom Sort Dropdown -->
+                  <div class="flex flex-col gap-1 relative">
+                    <label class="text-[12px] font-semibold text-slate-700">Sort By</label>
+                    <button @click="isSortOpen = !isSortOpen; isGenderOpen = false; isStatusOpen = false; isRangeOpen = false" class="relative w-[140px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                      <span class="truncate block w-full">{{ currentSort }}</span>
+                      <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isSortOpen}" />
+                    </button>
+                    <div v-if="isSortOpen" class="absolute top-[68px] right-0 w-[160px] bg-white border border-slate-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
+                      <div @click="currentSort = 'Newest First'; isSortOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': currentSort === 'Newest First'}">Newest First</div>
+                      <div @click="currentSort = 'Oldest First'; isSortOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': currentSort === 'Oldest First'}">Oldest First</div>
+                      <div @click="currentSort = 'Name (A to Z)'; isSortOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': currentSort === 'Name (A to Z)'}">Name (A to Z)</div>
+                      <div @click="currentSort = 'Name (Z to A)'; isSortOpen = false" class="px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-teal-600 cursor-pointer transition-colors" :class="{'bg-teal-50 text-teal-700 font-medium': currentSort === 'Name (Z to A)'}">Name (Z to A)</div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Table Body -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead class="bg-slate-800 text-white">
+                  <tr>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Date</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Patient</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Record Type</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Blood Pressure</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Pulse</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Weight / Height</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">BMI</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Attending Doctor</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <tr v-for="record in filteredRecords" :key="record.id" class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-5 text-sm text-slate-600">{{ record.date }}</td>
+                    <td class="px-6 py-5">
+                      <div class="font-bold text-slate-800 text-sm hover:text-teal-600 cursor-pointer transition-colors" @click="viewPatientDossier(record.patientId)">
+                        {{ record.patientName }}
+                      </div>
+                      <div class="text-xs text-slate-500 mt-0.5">({{ record.patientId }})</div>
+                    </td>
+                    <td class="px-6 py-5">
+                      <span :class="['px-3 py-1 rounded-full text-xs font-bold border', getBadgeClass(record.recordType)]">{{ record.recordType }}</span>
+                    </td>
+                    <td class="px-6 py-5 text-sm text-slate-600"><span class="font-bold text-slate-800">{{ record.bloodPressure.split('/')[0] }}/{{ record.bloodPressure.split('/')[1] || '' }}</span> mmHg</td>
+                    <td class="px-6 py-5 text-sm text-slate-600">{{ record.pulse }} bpm</td>
+                    <td class="px-6 py-5 text-sm text-slate-600">{{ record.weightHeight }}</td>
+                    <td class="px-6 py-5"><span :class="['px-2 py-1 font-bold text-xs rounded-md', getBmiClass(record.bmi)]">{{ record.bmi }}</span></td>
+                    <td class="px-6 py-5 text-sm text-slate-600">{{ record.attendingDoctor }}</td>
+                    <td class="px-6 py-5 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button @click="viewPatientDossier(record.patientId)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100" title="View Patient Medical Dossier">
+                          <Eye class="w-4 h-4" />
+                        </button>
+                        <button @click="openEditModal(record)" class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-transparent hover:border-teal-100" title="Edit">
+                          <Edit class="w-4 h-4" />
+                        </button>
+                        <button @click="deleteRecord(record.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100" title="Delete">
+                          <Trash2 class="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <!-- Empty State -->
+                  <tr v-if="filteredRecords.length === 0">
+                    <td colspan="9" class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center justify-center text-slate-400">
+                        <FileText class="w-12 h-12 mb-3 text-slate-300" />
+                        <p class="text-[15px] font-medium text-slate-600">No health records found</p>
+                        <p class="text-[13px] mt-1">Try adjusting your filters or search query.</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -315,7 +394,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                   <div class="space-y-1.5">
                     <label class="text-[13px] font-medium text-slate-700">Patient Name <span class="text-rose-500">*</span></label>
-                    <input list="recent-patients" type="text" v-model="newRecord.patientName"  @keydown.enter.prevent="recordForm?.requestSubmit()" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
+                    <input list="recent-patients" type="text" v-model="newRecord.patientName" @keydown.enter.prevent="recordForm?.requestSubmit()" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="recent-patients">
                       <option v-for="p in recentPatients" :key="p.id" :value="p.name">{{ p.id }}</option>
                     </datalist>
@@ -544,6 +623,7 @@
             </div>
           </div>
         </div>
+
       <!-- Image Preview Lightbox -->
       <div v-if="isImagePreviewOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" @click="isImagePreviewOpen = false">
         <div class="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center" @click.stop>
@@ -559,14 +639,18 @@
         </div>
       </div>
     </main>
-    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../services/api'
-import { Activity, LayoutDashboard, Users, FileText, LogOut, Plus, Trash2, Search, HeartPulse, LineChart, CalendarCheck, Apple, Settings, ChevronDown, X, User, Edit, Eye, Download } from 'lucide-vue-next'
+import { 
+  Activity, LayoutDashboard, Users, FileText, LogOut, Plus, Trash2, 
+  Search, HeartPulse, LineChart, CalendarCheck, Apple, Settings, 
+  ChevronDown, X, User, Edit, Eye, Download, ArrowLeft, Clock, CalendarDays 
+} from 'lucide-vue-next'
 
 // TypeScript Interfaces for strict typing
 interface HealthRecord {
@@ -617,13 +701,69 @@ const isSortOpen = ref(false)
 const currentSort = ref('Newest First')
 const searchQuery = ref('')
 
+// State for Dedicated Patient Dossier View
+const selectedPatientId = ref<string | null>(null)
+
 // Modal states
 const isAddModalOpen = ref(false)
-const isViewModalOpen = ref(false)
 const isImagePreviewOpen = ref(false)
 const previewImageUrl = ref('')
-const viewingRecord = ref<HealthRecord | null>(null)
 const editingRecordId = ref<string | null>(null)
+
+// Navigate into Dedicated Patient Dossier View
+const viewPatientDossier = (patientId: string) => {
+  selectedPatientId.value = patientId
+}
+
+// Filter all records belonging to the selected patient (newest to oldest)
+const currentPatientRecords = computed(() => {
+  if (!selectedPatientId.value) return []
+  return records.value
+    .filter(r => r.patientId === selectedPatientId.value || r.patientName.toLowerCase() === selectedPatientId.value?.toLowerCase())
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+})
+
+// Current patient profile metadata
+const currentPatientInfo = computed(() => {
+  if (!selectedPatientId.value || currentPatientRecords.value.length === 0) {
+    const firstMatch = records.value.find(r => r.patientId === selectedPatientId.value)
+    return firstMatch || null
+  }
+  return currentPatientRecords.value[0]
+})
+
+// Add new visit record for the currently selected patient
+const openNewVisitForCurrentPatient = () => {
+  const patient = currentPatientInfo.value
+  if (!patient) return
+  
+  editingRecordId.value = null
+  selectedFiles.value = []
+  existingAttachments.value = []
+  
+  const now = new Date()
+  recYear.value = now.getFullYear().toString()
+  recMonth.value = (now.getMonth() + 1).toString().padStart(2, '0')
+  recDay.value = now.getDate().toString()
+
+  newRecord.value = {
+    date: now.toISOString().split('T')[0] || '',
+    patientName: patient.patientName,
+    patientId: patient.patientId,
+    gender: patient.gender,
+    status: patient.status,
+    recordType: 'General Checkup',
+    bloodPressure: '',
+    pulse: '',
+    weightHeight: '',
+    bmi: '',
+    attendingDoctor: patient.attendingDoctor || 'Dr. Sarah Jenkins',
+    note: '',
+    weight: '',
+    height: ''
+  }
+  isAddModalOpen.value = true
+}
 
 const openImagePreview = (url: string) => {
   previewImageUrl.value = url
@@ -667,49 +807,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
 })
 
-const patientHistory = computed(() => {
-  if (!viewingRecord.value) return []
-  return records.value.filter(r => r.patientId === viewingRecord.value?.patientId)
-})
 
-const openNewVisitFromHistory = () => {
-  if (!viewingRecord.value) return;
-  const record = viewingRecord.value;
-  
-  editingRecordId.value = null;
-  selectedFiles.value = [];
-  existingAttachments.value = [];
-  
-  const now = new Date();
-  recYear.value = now.getFullYear().toString();
-  recMonth.value = (now.getMonth() + 1).toString().padStart(2, '0');
-  recDay.value = now.getDate().toString();
-  
-  newRecord.value = {
-    date: now.toISOString().split('T')[0] || '',
-    patientName: record.patientName,
-    patientId: record.patientId,
-    gender: record.gender,
-    status: record.status,
-    recordType: '',
-    bloodPressure: '',
-    pulse: '',
-    weightHeight: '',
-    bmi: '',
-    attendingDoctor: record.attendingDoctor,
-    note: '',
-    weight: '',
-    height: ''
-  };
-  
-  isViewModalOpen.value = false;
-  isAddModalOpen.value = true;
-}
-
-const openViewModal = (record: HealthRecord) => {
-  viewingRecord.value = record
-  isViewModalOpen.value = true
-}
 
 
 const capitalizeWords = (str: string) => {
