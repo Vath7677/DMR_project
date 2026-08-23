@@ -101,11 +101,14 @@
             type="submit" :disabled="isLocked"
             class="w-full font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm mt-6 text-white"
             :class="isLocked ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'">
-            {{ isLocked ? `Try again in ${lockoutTimeRemaining}s` : 'Sign In' }}
+            {{ isLocked ? 'Try Again' : 'Sign In' }}
           </button>
           
           <!-- Error / Lockout Message -->
-          <div v-if="errorMessage" class="mt-4 p-3 rounded-lg text-sm text-center font-medium border" :class="isLocked ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'">
+          <div v-if="isLocked" class="mt-4 p-3 rounded-lg text-sm text-center font-medium border bg-red-50 text-red-700 border-red-200">
+            Too many failed attempts. Please wait {{ lockoutTimeRemaining }} seconds.
+          </div>
+          <div v-else-if="errorMessage" class="mt-4 p-3 rounded-lg text-sm text-center font-medium border bg-yellow-50 text-yellow-700 border-yellow-200">
             {{ errorMessage }}
           </div>
         </form>
@@ -123,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '../services/api';
 import { Activity, Sparkles, Lock, Mail, Eye, EyeOff } from 'lucide-vue-next';
@@ -160,10 +163,12 @@ const handleLogin = async () => {
 
     if (data.status === 'error') {
         errorMessage.value = data.message;
+        isLocked.value = false;
+        if (timer) clearInterval(timer);
     } else if (data.status === 'locked') {
-        errorMessage.value = data.message;
         isLocked.value = true;
-        lockoutTimeRemaining.value = data.remaining_time;
+        lockoutTimeRemaining.value = data.remaining_time || 60;
+        errorMessage.value = '';
             
         if (timer) clearInterval(timer);
         timer = setInterval(() => {
@@ -210,5 +215,9 @@ onMounted(() => {
     
     rememberMe.value = true;   
   }
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
 });
 </script>

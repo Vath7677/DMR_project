@@ -32,17 +32,33 @@ class AuthController {
             // Find the user by email using Eloquent ORM
             $user = User::where('email', $email)->first();
 
-            if (!$user) {
-                echo json_encode(['status' => 'error', 'message' => "Email not found!"]);
-                return;
-            }
-            if (!password_verify($password, $user->password)) {
-                echo json_encode(['status' => 'error', 'message' => "Password mismatch!"]);
+            if (!$user || !password_verify($password, $user->password)) {
+                $_SESSION['failed_attempts']++;
+
+                if ($_SESSION['failed_attempts'] >= $max_attempts) {
+                    $_SESSION['locked_until'] = time() + $lockout_time;
+                    echo json_encode([
+                        'status' => 'locked', 
+                        'message' => "Too many failed attempts. Account locked for {$lockout_time} seconds.",
+                        'remaining_time' => $lockout_time
+                    ]);
+                    return;
+                }
+
+                $attempts_left = $max_attempts - $_SESSION['failed_attempts'];
+                echo json_encode([
+                    'status' => 'error', 
+                    'message' => "Invalid email or password! You have {$attempts_left} attempt" . ($attempts_left > 1 ? 's' : '') . " remaining.",
+                    'attempts_left' => $attempts_left
+                ]);
                 return;
             }
 
             $_SESSION['failed_attempts'] = 0;
-            // 🔑 SET THE SESSION VARIABLES (The Key!)
+            unset($_SESSION['locked_until']);
+            session_regenerate_id(true);
+
+            // 🔑 SET THE SESSION VARIABLES
             $_SESSION['user_id'] = $user->id;
             $_SESSION['username'] = $user->username;
             $_SESSION['role'] = $user->role;
@@ -53,7 +69,10 @@ class AuthController {
 
     // logout
     public function logout() {
-        session_destroy();
+        $_SESSION = [];
+        if (session_id()) {
+            session_destroy();
+        }
         echo json_encode(['status' => 'success', 'message' => 'Logout successful!']);
     }
 }

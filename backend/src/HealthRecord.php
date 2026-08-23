@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 class HealthRecord extends Model {
     protected $table = 'health_records';
     
+    public $timestamps = false;
+
     protected $fillable = [
         'record_id',
         'patient_name',
@@ -18,6 +20,8 @@ class HealthRecord extends Model {
         'weight',
         'height',
         'bmi',
-        'attending_doctor'
+        'attending_doctor',
+        'note',
+        'attachment_url'
     ];
 }

@@ -60,8 +60,9 @@ class PatientController {
             });
         }
 
-        $patient = Patient::find($id);
+        $patient = is_numeric($id) ? Patient::find($id) : Patient::where('patient_id', $id)->first();
         if (!$patient) {
+            http_response_code(404);
             echo json_encode(["status" => "error", "message" => "Patient not found"]);
             return;
         }
@@ -81,7 +82,7 @@ class PatientController {
     // 4. DELETE
     public function deletePatient($id) {
         require_once __DIR__ . '/Patient.php';
-        $patient = Patient::find($id);
+        $patient = is_numeric($id) ? Patient::find($id) : Patient::where('patient_id', $id)->first();
         if ($patient) {
             $patient->delete();
         }
@@ -90,7 +91,7 @@ class PatientController {
 
     public function getPatientById($id) {
         require_once __DIR__ . '/Patient.php';
-        $patient = Patient::find($id);
+        $patient = is_numeric($id) ? Patient::find($id) : Patient::where('patient_id', $id)->first();
         if ($patient) {
             echo json_encode(["status" => "success", "data" => $patient]);
         } else {

@@ -2,6 +2,18 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/DMR_project/backend/public';
 
+async function handleResponse(response: Response) {
+  const data = await response.json().catch(() => ({
+    status: 'error',
+    message: response.statusText || 'Network / Server Error',
+  }));
+
+  if (!response.ok) {
+    throw new Error(data.message || `Request failed with status ${response.status}`);
+  }
+  return data;
+}
+
 export const api = {
   async get(endpoint: string) {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -9,7 +21,7 @@ export const api = {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
-    return response.json();
+    return handleResponse(response);
   },
 
   async post(endpoint: string, body: any) {
@@ -19,7 +31,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    return response.json();
+    return handleResponse(response);
   },
 
   async postFormData(endpoint: string, formData: FormData) {
@@ -28,7 +40,7 @@ export const api = {
       credentials: 'include',
       body: formData,
     });
-    return response.json();
+    return handleResponse(response);
   },
 
   async put(endpoint: string, body: any) {
@@ -38,7 +50,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    return response.json();
+    return handleResponse(response);
   },
 
   async delete(endpoint: string) {
@@ -47,6 +59,6 @@ export const api = {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
-    return response.json();
+    return handleResponse(response);
   }
 };
