@@ -46,8 +46,13 @@ $app->options('/{routes:.+}', function ($request, $response, $args) {
 $app->add(function (Request $request, $handler) {
     $path = $request->getUri()->getPath();
     
-    // Ignore login, profile/avatar, and OPTIONS requests
-    if (strpos($path, '/api/auth/login') !== false || strpos($path, '/api/user/') !== false || strpos($path, '/uploads/') !== false || $request->getMethod() === 'OPTIONS') {
+    // Ignore login, profile/avatar, admin user management, reports, and OPTIONS requests
+    if (strpos($path, '/api/auth/login') !== false || 
+        strpos($path, '/api/user/') !== false || 
+        strpos($path, '/api/admin/') !== false || 
+        strpos($path, '/api/reports/') !== false || 
+        strpos($path, '/uploads/') !== false || 
+        $request->getMethod() === 'OPTIONS') {
         return $handler->handle($request);
     }
 
@@ -127,6 +132,38 @@ $app->get('/uploads/{filename:.+}', function (Request $request, Response $respon
         return $response->withHeader('Content-Type', $contentType)->withHeader('Access-Control-Allow-Origin', '*');
     }
     return $response->withStatus(404);
+});
+
+// SUPERADMIN USER MANAGEMENT API ROUTES
+$app->get('/api/admin/users', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/UserController.php';
+    (new UserController())->getAllUsers();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/admin/users', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/UserController.php';
+    (new UserController())->createUser();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->put('/api/admin/users/{id}', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/UserController.php';
+    (new UserController())->updateUser($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->delete('/api/admin/users/{id}', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/UserController.php';
+    (new UserController())->deleteUser($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+// FINANCIAL & SALARY REPORTS API ROUTE
+$app->get('/api/reports/financial', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/UserController.php';
+    (new UserController())->getFinancialReport();
+    return $response->withHeader('Content-Type', 'application/json');
 });
 
 

@@ -23,7 +23,7 @@
           v-for="item in menuItems" 
           :key="item.path" 
           :to="item.path" 
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200"
           :class="[
             $route.path === item.path 
               ? 'bg-teal-600 text-white font-semibold shadow-[0_0_20px_rgba(13,148,136,0.2)]' 
@@ -37,7 +37,7 @@
 
       <!-- Logout button -->
       <div class="p-5 border-t border-white/10 mt-auto">
-        <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg font-medium text-[14px] transition-all duration-200 cursor-pointer">
+        <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 rounded-xl font-medium text-[14px] transition-all duration-200 cursor-pointer">
           <LogOut class="w-5 h-5" />
           <span>Logout</span>
         </button>
@@ -58,6 +58,7 @@
             />
             <div class="flex flex-col text-left">
               <span class="text-[14px] font-bold text-slate-800 leading-tight">{{ username }}</span>
+              <span class="text-[11px] text-slate-400 font-medium capitalize">{{ userRole }}</span>
             </div>
             <ChevronDown class="w-4 h-4 text-slate-400 ml-1 transition-transform duration-200" :class="{ 'rotate-180': isProfileOpen }" />
           </button>
@@ -79,7 +80,10 @@
                   class="w-16 h-16 rounded-full object-cover border-2 border-teal-500 mb-3 shadow-sm bg-slate-100" 
                 />
                 <span class="text-[16px] font-bold text-slate-800 leading-tight">{{ username }}</span>
-                <span class="text-[12px] text-slate-500 mt-1">{{ userEmail }}</span>
+                <span class="text-[12px] text-slate-500 mt-0.5">{{ userEmail }}</span>
+                <span class="mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200">
+                  {{ userRole }}
+                </span>
               </div>
             </div>
             <div class="p-2">
@@ -104,11 +108,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from './services/api'
 import defaultAvatar from '@/assets/profiledefault.svg'
-import { LineChart, Users, FileText, Settings, LogOut, ChevronDown, X, User, Edit } from 'lucide-vue-next'
+import { 
+  LineChart, 
+  Users, 
+  FileText, 
+  BarChart3, 
+  ShieldCheck, 
+  Settings, 
+  LogOut, 
+  ChevronDown, 
+  X, 
+  User, 
+  Edit 
+} from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -116,6 +132,7 @@ const route = useRoute()
 // Reactive user profile refs
 const username = ref('admin')
 const userEmail = ref('admin@gmail.com')
+const userRole = ref<string>('superadmin')
 const userAvatar = ref<string>('')
 const isProfileOpen = ref(false)
 
@@ -144,10 +161,12 @@ const handleImageFallback = (e: Event) => {
 const loadUserProfile = async () => {
   const storedName = localStorage.getItem('username')
   const storedEmail = localStorage.getItem('userEmail')
+  const storedRole = localStorage.getItem('userRole')
   const storedAvatar = localStorage.getItem('userAvatar')
   
   if (storedName) username.value = storedName
   if (storedEmail) userEmail.value = storedEmail
+  if (storedRole) userRole.value = storedRole
   if (storedAvatar) userAvatar.value = resolveServerUrl(storedAvatar)
 
   // Fetch latest profile from backend API
@@ -161,6 +180,10 @@ const loadUserProfile = async () => {
       if (res.data.email) {
         userEmail.value = res.data.email
         localStorage.setItem('userEmail', res.data.email)
+      }
+      if (res.data.role) {
+        userRole.value = res.data.role
+        localStorage.setItem('userRole', res.data.role)
       }
       if (res.data.avatar) {
         const url = resolveServerUrl(res.data.avatar)
@@ -176,9 +199,11 @@ const loadUserProfile = async () => {
 const onProfileUpdated = () => {
   const storedName = localStorage.getItem('username')
   const storedEmail = localStorage.getItem('userEmail')
+  const storedRole = localStorage.getItem('userRole')
   const storedAvatar = localStorage.getItem('userAvatar')
   if (storedName) username.value = storedName
   if (storedEmail) userEmail.value = storedEmail
+  if (storedRole) userRole.value = storedRole
   userAvatar.value = storedAvatar ? resolveServerUrl(storedAvatar) : ''
 }
 
@@ -197,12 +222,24 @@ watch(() => route.path, () => {
   isProfileOpen.value = false
 })
 
-const menuItems = ref([
-  { name: 'Dashboard', path: '/dashboard', icon: LineChart },
-  { name: 'Manage Patients', path: '/patients', icon: Users },
-  { name: 'Health Records', path: '/health-records', icon: FileText },
-  { name: 'Settings', path: '/settings', icon: Settings }
-])
+// Dynamic RBAC Menu: Superadmin sees "Manage Users", regular users do not!
+const menuItems = computed(() => {
+  const items = [
+    { name: 'Dashboard', path: '/dashboard', icon: LineChart },
+    { name: 'Manage Patients', path: '/patients', icon: Users },
+    { name: 'Health Records', path: '/health-records', icon: FileText },
+    { name: 'Reports', path: '/reports', icon: BarChart3 }
+  ]
+
+  // Only show Manage Users for superadmin role
+  if (userRole.value === 'superadmin') {
+    items.push({ name: 'Manage Users', path: '/users', icon: ShieldCheck })
+  }
+
+  items.push({ name: 'Settings', path: '/settings', icon: Settings })
+
+  return items
+})
 
 const handleLogout = async () => {
   try {
