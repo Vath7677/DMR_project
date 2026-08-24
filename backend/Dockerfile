@@ -16,7 +16,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html/DMR_project/backend
 
 # Copy the backend code into the container
-COPY . /var/www/html/DMR_project/backend/
+COPY backend/ /var/www/html/DMR_project/backend/
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
