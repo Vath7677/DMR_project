@@ -34,25 +34,42 @@ $app->addErrorMiddleware(true, true, true);
 
 // Add CORS & Preflight (Allows Vue frontend on any domain/localhost to talk to Render)
 $app->add(function (Request $request, $handler) {
-    $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+    $origin = $request->getHeaderLine('Origin');
+    if (empty($origin)) {
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+    }
 
     if ($request->getMethod() === 'OPTIONS') {
         $response = new \Slim\Psr7\Response();
-        return $response
-            ->withHeader('Access-Control-Allow-Origin', $origin)
-            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+        $res = $response
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-User-Email')
             ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-            ->withHeader('Access-Control-Allow-Credentials', 'true')
             ->withStatus(200);
+
+        if ($origin !== '*') {
+            $res = $res
+                ->withHeader('Access-Control-Allow-Origin', $origin)
+                ->withHeader('Access-Control-Allow-Credentials', 'true');
+        } else {
+            $res = $res->withHeader('Access-Control-Allow-Origin', '*');
+        }
+        return $res;
     }
 
     $response = $handler->handle($request);
 
+    if ($origin !== '*') {
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', $origin)
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-User-Email')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+            ->withHeader('Access-Control-Allow-Credentials', 'true');
+    }
+
     return $response
-        ->withHeader('Access-Control-Allow-Origin', $origin)
-        ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
-        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-        ->withHeader('Access-Control-Allow-Credentials', 'true');
+        ->withHeader('Access-Control-Allow-Origin', '*')
+        ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-User-Email')
+        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
 });
 
 // Handle CORS Preflight requests for all routes
