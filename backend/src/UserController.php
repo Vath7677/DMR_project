@@ -21,7 +21,7 @@ class UserController {
 
     // 1. Get All Users (Superadmin Only)
     public function getAllUsers() {
-        $users = User::select('id', 'username', 'email', 'role', 'avatar', 'created_at')
+        $users = User::select('id', 'username', 'email', 'role', 'avatar')
             ->orderBy('id', 'asc')
             ->get();
 
@@ -76,8 +76,7 @@ class UserController {
                 'username' => $user->username,
                 'email' => $user->email,
                 'role' => $user->role,
-                'avatar' => $user->avatar,
-                'created_at' => $user->created_at
+                'avatar' => $user->avatar
             ]
         ]);
     }
@@ -129,7 +128,7 @@ class UserController {
         ]);
     }
 
-    // 4. Delete User
+    // 4. Delete User (Original Superadmin can delete anyone; nobody can delete Original Superadmin)
     public function deleteUser($id) {
         $user = User::find($id);
         if (!$user) {
@@ -137,9 +136,18 @@ class UserController {
             return;
         }
 
-        // Safeguard: Prevent deleting the main superadmin with ID 1
-        if ($user->id == 1 || $user->role === 'superadmin' && User::where('role', 'superadmin')->count() <= 1) {
-            echo json_encode(['status' => 'error', 'message' => 'Cannot delete primary superadmin account.']);
+        // Safeguard 1: NO ONE CAN DELETE THE ORIGINAL PRIMARY SUPERADMIN (admin@gmail.com / ID 1)
+        if ($user->email === 'admin@gmail.com' || $user->id == 1) {
+            echo json_encode([
+                'status' => 'error', 
+                'message' => 'The original primary superadmin (admin@gmail.com) cannot be deleted.'
+            ]);
+            return;
+        }
+
+        // Safeguard 2: Cannot delete yourself if currently active
+        if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $user->id) {
+            echo json_encode(['status' => 'error', 'message' => 'You cannot delete your own active account.']);
             return;
         }
 
@@ -147,7 +155,7 @@ class UserController {
 
         echo json_encode([
             'status' => 'success',
-            'message' => 'User deleted successfully!'
+            'message' => 'User account deleted successfully!'
         ]);
     }
 
@@ -193,6 +201,65 @@ class UserController {
                 'revenueTrends' => $revenueData,
                 'departments' => $departmentBreakdown
             ]
+        ]);
+    }
+
+    // 6. Get Login Activity & Device Records for specific user
+    public function getUserActivities($id) {
+        require_once __DIR__ . '/LoginActivity.php';
+        $user = User::find($id);
+        if (!$user) {
+            echo json_encode(['status' => 'error', 'message' => 'User not found.']);
+            return;
+        }
+
+        $activities = LoginActivity::where('user_id', $id)
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get();
+
+        $formatted = [];
+        foreach ($activities as $act) {
+            $timeStr = 'Just now';
+            if ($act->created_at) {
+                $actTime = strtotime($act->created_at);
+                $now = time();
+                $diff = $now - $actTime;
+                if ($diff < 3600) {
+                    $mins = max(1, round($diff / 60));
+                    $timeStr = "{$mins}m ago";
+                } elseif (date('Y-m-d', $actTime) === date('Y-m-d')) {
+                    $timeStr = 'Today, ' . date('H:i', $actTime);
+                } elseif (date('Y-m-d', $actTime) === date('Y-m-d', strtotime('-1 day'))) {
+                    $timeStr = 'Yesterday, ' . date('H:i', $actTime);
+                } else {
+                    $timeStr = date('M d, Y H:i', $actTime);
+                }
+            }
+
+            $isMobile = (stripos($act->device_name, 'phone') !== false || stripos($act->device_name, 'iPhone') !== false || stripos($act->device_name, 'Android') !== false);
+
+            $formatted[] = [
+                'id' => $act->id,
+                'deviceName' => $act->device_name,
+                'browser' => $act->browser,
+                'ip' => $act->ip_address,
+                'timeStr' => $timeStr,
+                'createdAt' => $act->created_at,
+                'type' => $isMobile ? 'mobile' : 'desktop'
+            ];
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role,
+                'avatar' => $user->avatar ?: null
+            ],
+            'data' => $formatted
         ]);
     }
 }

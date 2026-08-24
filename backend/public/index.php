@@ -114,6 +114,12 @@ $app->post('/api/user/password', function (Request $request, Response $response,
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->get('/api/user/login-activities', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/AuthController.php';
+    (new AuthController())->getLoginActivities();
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
 // Explicit Uploads File Serving Route (Guarantees image loads regardless of Apache root)
 $app->get('/uploads/{filename:.+}', function (Request $request, Response $response, $args) {
     $filePath = __DIR__ . '/uploads/' . basename($args['filename']);
@@ -159,6 +165,12 @@ $app->delete('/api/admin/users/{id}', function (Request $request, Response $resp
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->get('/api/admin/users/{id}/activities', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/UserController.php';
+    (new UserController())->getUserActivities($args['id']);
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
 // FINANCIAL & SALARY REPORTS API ROUTE
 $app->get('/api/reports/financial', function (Request $request, Response $response, $args) {
     require_once __DIR__ . '/../src/UserController.php';
@@ -166,6 +178,50 @@ $app->get('/api/reports/financial', function (Request $request, Response $respon
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+
+// SYSTEM AUDIT & RECENT ACTIVITIES API ROUTE
+$app->get('/api/activities', function (Request $request, Response $response, $args) {
+    require_once __DIR__ . '/../src/Activity.php';
+    
+    $activities = Activity::orderBy('created_at', 'desc')->orderBy('id', 'desc')->limit(15)->get();
+    
+    $formatted = $activities->map(function ($act) {
+        $timestamp = strtotime($act->created_at);
+        $diff = time() - $timestamp;
+        
+        if ($diff < 60) {
+            $timeAgo = 'Just now';
+        } elseif ($diff < 3600) {
+            $mins = max(1, floor($diff / 60));
+            $timeAgo = $mins . ' min' . ($mins > 1 ? 's' : '') . ' ago';
+        } elseif ($diff < 86400) {
+            $hours = floor($diff / 3600);
+            $timeAgo = $hours . ' hour' . ($hours > 1 ? 's' : '') . ' ago';
+        } elseif ($diff < 172800) {
+            $timeAgo = 'Yesterday';
+        } else {
+            $days = floor($diff / 86400);
+            $timeAgo = $days . ' days ago';
+        }
+        
+        return [
+            'id' => $act->id,
+            'type' => $act->type,
+            'title' => $act->title,
+            'description' => $act->description,
+            'actor_name' => $act->actor_name,
+            'icon_type' => $act->icon_type,
+            'time_ago' => $timeAgo,
+            'created_at' => $act->created_at
+        ];
+    });
+    
+    $response->getBody()->write(json_encode([
+        'status' => 'success',
+        'data' => $formatted
+    ]));
+    return $response->withHeader('Content-Type', 'application/json');
+});
 
 // PATIENT API ROUTES
 $app->get('/api/patients', function (Request $request, Response $response, $args) {

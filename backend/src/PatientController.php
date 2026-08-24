@@ -35,15 +35,24 @@ class PatientController {
         $patient->dob = $data['dob'] ?? date('Y-m-d');
         $patient->phone = $data['phone'] ?? '';
         $patient->address = $data['address'] ?? '';
-        $patient->status = $data['status'] ?? 'Active';
         $patient->save();
+
+        require_once __DIR__ . '/Activity.php';
+        $fullName = trim($patient->first_name . ' ' . $patient->last_name);
+        Activity::log(
+            'patient_created',
+            'New Patient Registered',
+            "{$fullName} ({$patient->patient_id}) was added to the system",
+            'Staff',
+            'patient'
+        );
 
         echo json_encode([
             "status" => "success", 
             "message" => "Patient added successfully!",
             "patient" => [
                 "id" => $patient->patient_id,
-                "name" => $patient->first_name . ' ' . $patient->last_name
+                "name" => $fullName
             ]
         ]);
     }
@@ -76,6 +85,16 @@ class PatientController {
         if (isset($data['status'])) $patient->status = $data['status'];
         $patient->save();
 
+        require_once __DIR__ . '/Activity.php';
+        $fullName = trim($patient->first_name . ' ' . $patient->last_name);
+        Activity::log(
+            'patient_updated',
+            'Patient Profile Updated',
+            "Updated details for {$fullName} ({$patient->patient_id})",
+            'Staff',
+            'patient'
+        );
+
         echo json_encode(["status" => "success", "message" => "Patient updated successfully!"]);
     }
 
@@ -84,7 +103,17 @@ class PatientController {
         require_once __DIR__ . '/Patient.php';
         $patient = is_numeric($id) ? Patient::find($id) : Patient::where('patient_id', $id)->first();
         if ($patient) {
+            require_once __DIR__ . '/Activity.php';
+            $fullName = trim($patient->first_name . ' ' . $patient->last_name);
+            $pid = $patient->patient_id;
             $patient->delete();
+            Activity::log(
+                'patient_deleted',
+                'Patient Deleted',
+                "Patient {$fullName} ({$pid}) was removed from the system",
+                'Staff',
+                'delete'
+            );
         }
         echo json_encode(["status" => "success", "message" => "Patient deleted successfully!"]);
     }

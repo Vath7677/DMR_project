@@ -12,18 +12,10 @@
 
       <div class="flex items-center gap-3">
         <!-- Date Selector -->
-        <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-xs text-xs font-semibold text-slate-700">
+        <div class="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-xs text-xs font-semibold text-slate-700">
           <Calendar class="w-4 h-4 text-teal-600" />
           <span>Last 6 Months (2026)</span>
         </div>
-
-        <button 
-          @click="printReport" 
-          class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-semibold text-sm transition-colors border border-slate-200 shadow-xs cursor-pointer"
-        >
-          <Printer class="w-4 h-4 text-slate-500" />
-          <span>Print Report</span>
-        </button>
       </div>
     </div>
 
@@ -204,8 +196,7 @@ import {
   CreditCard, 
   TrendingUp, 
   Users, 
-  Calendar, 
-  Printer 
+  Calendar 
 } from 'lucide-vue-next'
 
 ChartJS.register(
@@ -243,10 +234,6 @@ const fetchReports = async () => {
 onMounted(() => {
   fetchReports()
 })
-
-const printReport = () => {
-  window.print()
-}
 
 // 📊 Salary Bar Chart Data
 const salaryChartData = computed(() => {

@@ -107,6 +107,15 @@ class HealthRecordController {
         
         $record->save();
 
+        require_once __DIR__ . '/Activity.php';
+        Activity::log(
+            'record_created',
+            'Health Record Added',
+            "{$record->record_type} recorded for {$record->patient_name} (BP: {$record->blood_pressure})",
+            $record->attending_doctor ?: 'Doctor',
+            'vitals'
+        );
+
         echo json_encode(["status" => "success", "message" => "Record added successfully!"]);
     }
 
@@ -200,6 +209,15 @@ class HealthRecordController {
         
         $record->save();
 
+        require_once __DIR__ . '/Activity.php';
+        Activity::log(
+            'record_updated',
+            'Health Record Updated',
+            "Updated {$record->record_type} encounter for {$record->patient_name}",
+            $record->attending_doctor ?: 'Doctor',
+            'record'
+        );
+
         echo json_encode(["status" => "success", "message" => "Record updated successfully!"]);
     }
     // DELETE a record
@@ -218,7 +236,19 @@ class HealthRecordController {
                 }
             }
             
+            $pName = $record->patient_name;
+            $rType = $record->record_type;
+            $doc = $record->attending_doctor;
             $record->delete();
+
+            require_once __DIR__ . '/Activity.php';
+            Activity::log(
+                'record_deleted',
+                'Health Record Deleted',
+                "Deleted {$rType} record for {$pName}",
+                $doc ?: 'Staff',
+                'delete'
+            );
         }
         echo json_encode(["status" => "success", "message" => "Record deleted successfully!"]);
     }

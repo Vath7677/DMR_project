@@ -1,15 +1,47 @@
 <template>
   <div class="p-8 bg-slate-50/60 min-h-full">
-    <!-- Clean, Modern Toast Alert Notification (Top Right) -->
+    <!-- Modern Sleek Toast Notification -->
     <Transition name="toast">
       <div 
         v-if="showToast" 
-        class="fixed top-24 right-8 z-50 flex items-center gap-3 px-4 py-2.5 bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-800 text-xs font-medium"
+        class="fixed top-6 right-8 z-50 flex items-center gap-3 px-4 py-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-900/10 border transition-all duration-300 font-sans"
+        :class="[
+          toastType === 'error'
+            ? 'border-rose-200 ring-1 ring-rose-500/10'
+            : 'border-emerald-200 ring-1 ring-emerald-500/10'
+        ]"
       >
-        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
-          <Check class="w-3 h-3 stroke-[3]" />
+        <!-- Icon Pill -->
+        <div 
+          class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+          :class="[
+            toastType === 'error' 
+              ? 'bg-rose-50 text-rose-600 border border-rose-100' 
+              : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+          ]"
+        >
+          <AlertCircle v-if="toastType === 'error'" class="w-4 h-4" />
+          <CheckCircle2 v-else class="w-4 h-4" />
         </div>
-        <span class="text-slate-100 tracking-tight font-medium pr-1">{{ toastMessage }}</span>
+
+        <!-- Text Content -->
+        <div class="pr-2">
+          <p 
+            class="text-xs font-semibold tracking-tight"
+            :class="toastType === 'error' ? 'text-rose-950' : 'text-slate-800'"
+          >
+            {{ toastMessage }}
+          </p>
+        </div>
+
+        <!-- Dismiss Button -->
+        <button 
+          @click="showToast = false" 
+          type="button" 
+          class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1 rounded-lg transition-colors cursor-pointer ml-1"
+        >
+          <X class="w-3.5 h-3.5" />
+        </button>
       </div>
     </Transition>
 
@@ -70,13 +102,13 @@
               title="Click to change photo"
             >
               <img 
-                :src="profileImage || defaultAvatar" 
-                @error="handleImageFallback"
+                :src="displayAvatar" 
+                @error="onImageError"
                 alt="Profile Avatar" 
                 class="w-20 h-20 rounded-full object-cover border-2 border-white shadow-sm ring-2 ring-slate-200/70 bg-slate-100 transition-transform duration-200 group-hover:ring-teal-500 group-hover:scale-[1.02]" 
               />
               <!-- Subtle Hover Overlay -->
-              <div class="absolute inset-0 rounded-full bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+              <div class="absolute inset-0 rounded-full bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Camera class="w-5 h-5 text-white drop-shadow-md" />
               </div>
               <input 
@@ -108,9 +140,9 @@
                 >
                   Upload new image
                 </button>
-                <span v-if="profileImage" class="text-slate-300">•</span>
+                <span v-if="hasCustomAvatar" class="text-slate-300">•</span>
                 <button 
-                  v-if="profileImage" 
+                  v-if="hasCustomAvatar" 
                   type="button" 
                   @click="removeAvatar" 
                   class="text-xs font-semibold text-rose-500 hover:text-rose-600 cursor-pointer"
@@ -124,14 +156,16 @@
           <!-- Form Fields Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-2">Full Name</label>
+              <label class="block text-xs font-semibold text-slate-700 mb-2">Username</label>
               <div class="relative">
                 <User class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input 
                   type="text" 
                   v-model="profileName" 
+                  @input="profileName = profileName.replace(/\b\w/g, (c) => c.toUpperCase())"
+                  autocapitalize="words"
                   placeholder="admin"
-                  class="w-full py-2.5 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-all shadow-2xs" 
+                  class="w-full py-2.5 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-all shadow-2xs font-sans" 
                 />
               </div>
             </div>
@@ -143,8 +177,14 @@
                 <input 
                   type="email" 
                   v-model="profileEmail" 
-                  placeholder="admin@gmail.com"
-                  class="w-full py-2.5 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-all shadow-2xs" 
+                  :disabled="!isSuperAdmin"
+                  placeholder="doctor@hospital.com"
+                  :class="[
+                    'w-full py-2.5 pl-10 pr-4 border rounded-xl text-sm transition-all shadow-2xs font-sans',
+                    !isSuperAdmin 
+                      ? 'bg-slate-100/90 border-slate-200 text-slate-500 cursor-not-allowed select-none' 
+                      : 'bg-white border-slate-200 text-slate-800 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10'
+                  ]" 
                 />
               </div>
             </div>
@@ -249,21 +289,49 @@
 
           <!-- Recent Login Activity -->
           <div class="mt-10 pt-6 border-t border-slate-100">
-            <h3 class="font-bold text-slate-800 text-sm mb-3">Recent Login Activity</h3>
-            <div class="bg-slate-50/70 border border-slate-200/80 rounded-xl overflow-hidden divide-y divide-slate-200/60">
-              <div class="px-4 py-3 flex justify-between items-center bg-white">
-                <div class="flex items-center gap-2.5">
-                  <Laptop class="w-4 h-4 text-teal-600" />
-                  <span class="text-xs font-medium text-slate-800">MacBook Pro - Chrome</span>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-slate-800 text-sm font-heading tracking-tight">Recent Login Activity</h3>
+              <span class="text-[11px] font-medium text-slate-400 font-sans">Security Audit</span>
+            </div>
+            
+            <div class="bg-slate-50/70 border border-slate-200/80 rounded-xl overflow-hidden divide-y divide-slate-200/60 shadow-2xs font-sans">
+              <div 
+                v-for="act in loginActivities" 
+                :key="act.id"
+                class="px-4 py-3 flex justify-between items-center transition-colors"
+                :class="act.isCurrent ? 'bg-white' : 'bg-slate-50/40 hover:bg-white'"
+              >
+                <div class="flex items-center gap-3 font-sans">
+                  <div 
+                    class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                    :class="act.isCurrent ? 'bg-teal-50 text-teal-600 border border-teal-100/60' : 'bg-slate-100 text-slate-400'"
+                  >
+                    <Smartphone v-if="act.type === 'mobile'" class="w-3.5 h-3.5" />
+                    <Laptop v-else class="w-3.5 h-3.5" />
+                  </div>
+                  <div class="font-sans">
+                    <span 
+                      class="text-xs font-semibold block leading-tight font-sans"
+                      :class="act.isCurrent ? 'text-slate-800' : 'text-slate-600'"
+                    >
+                      {{ act.deviceName }} - {{ act.browser }}
+                    </span>
+                    <span v-if="act.ip" class="text-[10px] text-slate-400 font-sans">IP: {{ act.ip }}</span>
+                  </div>
                 </div>
-                <span class="text-[11px] font-semibold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full">Current Session</span>
-              </div>
-              <div class="px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center gap-2.5">
-                  <Smartphone class="w-4 h-4 text-slate-400" />
-                  <span class="text-xs font-medium text-slate-600">iPhone 14 - Safari</span>
+
+                <div>
+                  <span 
+                    v-if="act.isCurrent" 
+                    class="text-[11px] font-semibold text-teal-700 bg-teal-50 border border-teal-100/90 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 font-sans"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
+                    Current Session
+                  </span>
+                  <span v-else class="text-xs text-slate-500 font-medium font-sans">
+                    {{ act.timeStr }}
+                  </span>
                 </div>
-                <span class="text-xs text-slate-400">Yesterday, 14:32</span>
               </div>
             </div>
           </div>
@@ -275,7 +343,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { api } from '../services/api'
 import defaultAvatar from '@/assets/profiledefault.svg'
 import { 
@@ -287,8 +355,9 @@ import {
   Lock, 
   Eye, 
   EyeOff, 
-  Check,
   CheckCircle2, 
+  AlertCircle,
+  X,
   Laptop, 
   Smartphone 
 } from 'lucide-vue-next'
@@ -297,9 +366,12 @@ const activeTab = ref('profile')
 
 const profileName = ref('admin')
 const profileEmail = ref('admin@gmail.com')
+const profileRole = ref(localStorage.getItem('userRole') || 'superadmin')
+const isSuperAdmin = computed(() => profileRole.value === 'superadmin')
+const avatarPath = ref<string | null>(null)
 
-// Direct ref holding the avatar image source
-const profileImage = ref<string>('')
+// Local staged states (ONLY saved when "Save Changes" is clicked)
+const previewUrl = ref<string | null>(null)
 const pendingFile = ref<File | null>(null)
 const isPendingRemove = ref(false)
 
@@ -316,34 +388,74 @@ const showConfirm = ref(false)
 
 const showToast = ref(false)
 const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
 
-const displayToast = (msg: string) => {
+const displayToast = (msg: string, type: 'success' | 'error' = 'success') => {
   toastMessage.value = msg
+  toastType.value = type
   showToast.value = true
   setTimeout(() => {
     showToast.value = false
-  }, 3000)
+  }, 3500)
 }
 
-const resolveServerUrl = (path: string) => {
-  if (!path) return ''
-  if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
-    return path
+const onImageError = (e: Event) => {
+  const target = e.target as HTMLImageElement
+  target.src = defaultAvatar
+}
+
+const displayAvatar = computed(() => {
+  // If user selected a new preview image or clicked remove
+  if (previewUrl.value) {
+    return previewUrl.value
   }
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path
-  return `http://localhost/DMR_project/backend/public/${cleanPath}`
+  if (isPendingRemove.value) {
+    return defaultAvatar
+  }
+  if (!avatarPath.value) {
+    return defaultAvatar
+  }
+  if (avatarPath.value.startsWith('http') || avatarPath.value.startsWith('data:')) {
+    return avatarPath.value
+  }
+  return `http://localhost/DMR_project/backend/public/${avatarPath.value}`
+})
+
+const hasCustomAvatar = computed(() => {
+  if (isPendingRemove.value) return false
+  if (previewUrl.value && previewUrl.value !== defaultAvatar) return true
+  return !!avatarPath.value
+})
+
+interface ActivityItem {
+  id: number
+  deviceName: string
+  browser: string
+  ip?: string
+  isCurrent: boolean
+  timeStr: string
+  type: 'mobile' | 'desktop'
 }
 
-const handleImageFallback = (e: Event) => {
-  const img = e.target as HTMLImageElement
-  if (img && img.src) {
-    if (img.src.includes('/DMR_project/backend/public/uploads/')) {
-      img.src = img.src.replace('/DMR_project/backend/public/uploads/', '/uploads/')
-    } else if (img.src.includes(':5184/uploads/')) {
-      img.src = `http://localhost/uploads/${img.src.split('/uploads/')[1]}`
-    } else {
-      img.src = defaultAvatar
+const loginActivities = ref<ActivityItem[]>([
+  {
+    id: 1,
+    deviceName: 'MacBook Pro',
+    browser: 'Chrome',
+    isCurrent: true,
+    timeStr: 'Current Session',
+    type: 'desktop'
+  }
+])
+
+const fetchLoginActivities = async () => {
+  try {
+    const res = await api.get('/api/user/login-activities')
+    if (res && res.status === 'success' && Array.isArray(res.data) && res.data.length > 0) {
+      loginActivities.value = res.data
     }
+  } catch (err) {
+    console.warn('Error fetching login activities:', err)
   }
 }
 
@@ -354,7 +466,7 @@ const loadProfile = async () => {
   
   if (storedName) profileName.value = storedName
   if (storedEmail) profileEmail.value = storedEmail
-  if (storedAvatar) profileImage.value = storedAvatar
+  if (storedAvatar) avatarPath.value = storedAvatar
 
   try {
     const res = await api.get('/api/user/profile')
@@ -367,32 +479,39 @@ const loadProfile = async () => {
         profileEmail.value = res.data.email
         localStorage.setItem('userEmail', res.data.email)
       }
-      if (res.data.avatar) {
-        const fullAvatarUrl = resolveServerUrl(res.data.avatar)
-        profileImage.value = fullAvatarUrl
-        localStorage.setItem('userAvatar', fullAvatarUrl)
-        window.dispatchEvent(new CustomEvent('profile-updated'))
+      if (res.data.role) {
+        profileRole.value = res.data.role
+        localStorage.setItem('userRole', res.data.role)
       }
+      avatarPath.value = res.data.avatar || null
+      if (res.data.avatar) {
+        localStorage.setItem('userAvatar', res.data.avatar)
+      } else {
+        localStorage.removeItem('userAvatar')
+      }
+      window.dispatchEvent(new CustomEvent('profile-updated'))
     }
   } catch (err) {
-    // Continue with localStorage
+    // Continue with localStorage data
   }
 }
 
 onMounted(() => {
   loadProfile()
+  fetchLoginActivities()
 })
 
 const triggerFileSelect = () => {
   fileInputRef.value?.click()
 }
 
-// 📸 Handle file selection: Read Base64 directly into profileImage ref
+// 📸 Handle photo selection: PREVIEW ONLY (DOES NOT SAVE YET)
 const handleFileSelect = (e: Event) => {
   const target = e.target as HTMLInputElement
   if (target.files && target.files[0]) {
     const file = target.files[0]
     
+    // File size check 800KB
     if (file.size > 800 * 1024) {
       displayToast('File too large! Max size is 800KB.')
       return
@@ -400,45 +519,45 @@ const handleFileSelect = (e: Event) => {
 
     pendingFile.value = file
     isPendingRemove.value = false
-
-    // Convert file to Base64 data URL and assign directly to profileImage ref
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (reader.result) {
-        profileImage.value = reader.result as string
-        displayToast('Photo selected! Click "Save Changes" to save.')
-      }
-    }
-    reader.readAsDataURL(file)
+    previewUrl.value = URL.createObjectURL(file)
+    displayToast('Photo selected! Click "Save Changes" to apply.')
   }
 }
 
-// 🗑️ Stage photo removal
+// 🗑️ Stage photo removal (DOES NOT SAVE YET)
 const removeAvatar = () => {
-  profileImage.value = ''
+  previewUrl.value = defaultAvatar
   pendingFile.value = null
   isPendingRemove.value = true
-  displayToast('Photo removed! Click "Save Changes" to save.')
+  displayToast('Photo removed! Click "Save Changes" to apply.')
 }
 
-// 💾 Save Changes
+// 💾 Save Changes: Uploads staged photo & updates DB + localStorage
 const saveProfile = async () => {
   isSaving.value = true
 
   try {
-    // 1. If user clicked remove photo
+    // 1. If user clicked remove photo, call delete API
     if (isPendingRemove.value) {
       try {
         await api.delete('/api/user/avatar')
       } catch (e) {
         console.error('Delete avatar error:', e)
       }
-      profileImage.value = ''
+      avatarPath.value = null
       localStorage.removeItem('userAvatar')
     }
-    // 2. If user selected a new photo, upload to backend & save to localStorage
+    // 2. If user selected a new photo, upload and persist it
     else if (pendingFile.value) {
       const fileToSave = pendingFile.value
+      
+      // Convert to Base64 as guaranteed persistent local preview
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(fileToSave)
+      })
+
       const formData = new FormData()
       formData.append('avatar', fileToSave)
       formData.append('email', profileEmail.value)
@@ -446,21 +565,20 @@ const saveProfile = async () => {
       try {
         const uploadRes = await api.postFormData('/api/user/avatar', formData)
         if (uploadRes && uploadRes.status === 'success' && uploadRes.avatar) {
-          const serverUrl = resolveServerUrl(uploadRes.avatar)
-          profileImage.value = serverUrl
-          localStorage.setItem('userAvatar', serverUrl)
+          avatarPath.value = uploadRes.avatar
+          localStorage.setItem('userAvatar', uploadRes.avatar)
         } else {
-          localStorage.setItem('userAvatar', profileImage.value)
+          avatarPath.value = dataUrl
+          localStorage.setItem('userAvatar', dataUrl)
         }
       } catch (uploadErr) {
         console.warn('Backend upload fallback:', uploadErr)
-        localStorage.setItem('userAvatar', profileImage.value)
+        avatarPath.value = dataUrl
+        localStorage.setItem('userAvatar', dataUrl)
       }
-    } else if (profileImage.value) {
-      localStorage.setItem('userAvatar', profileImage.value)
     }
 
-    // 3. Update profile details (name, email)
+    // 3. Update username & email
     try {
       const res = await api.put('/api/user/profile', {
         username: profileName.value,
@@ -472,13 +590,15 @@ const saveProfile = async () => {
         profileEmail.value = res.email || profileEmail.value
       }
     } catch (e) {
-      console.warn('Profile update error:', e)
+      console.warn('Profile update fallback:', e)
     }
 
     localStorage.setItem('username', profileName.value)
     localStorage.setItem('userEmail', profileEmail.value)
 
+    // Reset staged pending states
     pendingFile.value = null
+    previewUrl.value = null
     isPendingRemove.value = false
 
     // Sync to App.vue top header immediately
@@ -487,7 +607,10 @@ const saveProfile = async () => {
 
   } catch (err: any) {
     console.error('Save profile error:', err)
-    displayToast('Profile saved!')
+    localStorage.setItem('username', profileName.value)
+    localStorage.setItem('userEmail', profileEmail.value)
+    window.dispatchEvent(new CustomEvent('profile-updated'))
+    displayToast('Profile updated!')
   } finally {
     isSaving.value = false
   }
@@ -495,20 +618,29 @@ const saveProfile = async () => {
 
 const updatePassword = async () => {
   if (!currentPassword.value) {
-    displayToast('Please enter your current password')
+    displayToast('Please enter your current password.', 'error')
     return
   }
   if (!newPassword.value) {
-    displayToast('Please enter a new password')
+    displayToast('Please enter a new password.', 'error')
+    return
+  }
+  if (newPassword.value.length < 6) {
+    displayToast('New password must be at least 6 characters long.', 'error')
     return
   }
   if (newPassword.value !== confirmPassword.value) {
-    displayToast('New passwords do not match')
+    displayToast('New password and confirm password do not match!', 'error')
+    return
+  }
+  if (currentPassword.value === newPassword.value) {
+    displayToast('New password cannot be the same as your current password!', 'error')
     return
   }
 
   try {
     const res = await api.post('/api/user/password', {
+      email: profileEmail.value,
       currentPassword: currentPassword.value,
       newPassword: newPassword.value
     })
@@ -517,12 +649,12 @@ const updatePassword = async () => {
       currentPassword.value = ''
       newPassword.value = ''
       confirmPassword.value = ''
-      displayToast('Password updated successfully!')
+      displayToast(res.message || 'Password updated successfully!', 'success')
     } else {
-      displayToast(res.message || 'Failed to update password')
+      displayToast(res.message || 'Current password is incorrect! Please try again.', 'error')
     }
   } catch (err: any) {
-    displayToast(err.message || 'Error updating password')
+    displayToast(err.message || 'Error updating password.', 'error')
   }
 }
 </script>
@@ -545,12 +677,12 @@ const updatePassword = async () => {
 
 .toast-enter-active,
 .toast-leave-active {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
-  transform: translateY(-8px) scale(0.96);
+  transform: translateY(-8px);
 }
 </style>
