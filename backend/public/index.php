@@ -7,11 +7,16 @@ use Slim\Factory\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// Set PHP Session to 30 days to match Vue's localStorage
+$isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
+    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+// Set PHP Session for Cross-Origin (Frontend <-> Render Backend)
 session_set_cookie_params([
     'lifetime' => 86400 * 30,
     'path' => '/',
-    'samesite' => 'Lax'
+    'secure' => $isHttps,
+    'httponly' => true,
+    'samesite' => $isHttps ? 'None' : 'Lax',
 ]);
 session_start();
 ob_start();
@@ -27,16 +32,26 @@ if (!empty($basePath)) {
 }
 $app->addErrorMiddleware(true, true, true);
 
-// Add CORS (This allows your Vue frontend to talk to the backend)
+// Add CORS & Preflight (Allows Vue frontend on any domain/localhost to talk to Render)
 $app->add(function (Request $request, $handler) {
-    $response = $handler->handle($request);
-
     $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+
+    if ($request->getMethod() === 'OPTIONS') {
+        $response = new \Slim\Psr7\Response();
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', $origin)
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+            ->withHeader('Access-Control-Allow-Credentials', 'true')
+            ->withStatus(200);
+    }
+
+    $response = $handler->handle($request);
 
     return $response
         ->withHeader('Access-Control-Allow-Origin', $origin)
         ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
-        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
         ->withHeader('Access-Control-Allow-Credentials', 'true');
 });
 
@@ -57,6 +72,22 @@ $app->add(function (Request $request, $handler) {
         strpos($path, '/uploads/') !== false || 
         $request->getMethod() === 'OPTIONS') {
         return $handler->handle($request);
+    }
+
+    // Auto-authenticate via X-User-Email Header if cross-origin cookie is blocked
+    $userEmail = $request->getHeaderLine('X-User-Email');
+    if (!isset($_SESSION['user_id']) && !empty($userEmail)) {
+        require_once __DIR__ . '/../src/User.php';
+        try {
+            $user = User::where('email', $userEmail)->first();
+            if ($user) {
+                $_SESSION['user_id'] = $user->id;
+                $_SESSION['username'] = $user->username;
+                $_SESSION['role'] = $user->role;
+            }
+        } catch (\Exception $e) {
+            // Continue
+        }
     }
 
     // Check for the "Key" (Session)

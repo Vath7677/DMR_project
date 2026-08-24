@@ -1,6 +1,7 @@
 // frontend/src/services/api.ts
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/DMR_project/backend/public';
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/DMR_project/backend/public';
+const API_BASE_URL = 'https://dmr-project-mwmp.onrender.com';
 
 async function handleResponse(response: Response) {
   const data = await response.json().catch(() => ({
@@ -14,12 +15,22 @@ async function handleResponse(response: Response) {
   return data;
 }
 
+function getHeaders(isFormData = false) {
+  const headers: Record<string, string> = {
+    'X-User-Email': localStorage.getItem('userEmail') || 'admin@gmail.com',
+  };
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  return headers;
+}
+
 export const api = {
   async get(endpoint: string) {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'GET',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
     });
     return handleResponse(response);
   },
@@ -28,7 +39,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       credentials: 'include', 
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(body),
     });
     return handleResponse(response);
@@ -38,6 +49,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       credentials: 'include',
+      headers: getHeaders(true),
       body: formData,
     });
     return handleResponse(response);
@@ -47,7 +59,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PUT',
       credentials: 'include', 
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(body),
     });
     return handleResponse(response);
@@ -57,7 +69,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
     });
     return handleResponse(response);
   }
