@@ -21,7 +21,10 @@ require __DIR__ . '/../config/database.php';
 
 $app = AppFactory::create();
 
-$app->setBasePath('/DMR_project/backend/public');
+$basePath = getenv('APP_BASE_PATH') !== false ? getenv('APP_BASE_PATH') : (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/DMR_project/backend/public') !== false ? '/DMR_project/backend/public' : '');
+if (!empty($basePath)) {
+    $app->setBasePath($basePath);
+}
 $app->addErrorMiddleware(true, true, true);
 
 // Add CORS (This allows your Vue frontend to talk to the backend)

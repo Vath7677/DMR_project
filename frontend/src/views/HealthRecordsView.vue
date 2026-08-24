@@ -16,15 +16,6 @@
 
             <div class="flex items-center gap-3">
               <button 
-                @click="printDossier" 
-                class="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-semibold text-sm transition-colors shadow-xs"
-                title="Print Patient Medical Summary"
-              >
-                <Printer class="w-4 h-4 text-slate-500" />
-                <span>Print Dossier</span>
-              </button>
-
-              <button 
                 @click="openNewVisitForCurrentPatient" 
                 class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-xs"
               >
@@ -685,7 +676,7 @@ import { api } from '../services/api'
 import { 
   Activity, Users, FileText, Plus, Trash2, 
   Search, HeartPulse, LineChart, ChevronDown, X, User, Edit, Eye, Download, ArrowLeft, Clock, CalendarDays,
-  Printer, Scale, FileCheck
+  Scale, FileCheck
 } from 'lucide-vue-next'
 
 // TypeScript Interfaces for strict typing
@@ -817,11 +808,6 @@ const getBmiLabel = (bmiStr: string) => {
   if (bmi >= 18.5 && bmi < 25) return 'Normal'
   if (bmi >= 25 && bmi < 30) return 'Overweight'
   return 'Obese'
-}
-
-// Print patient dossier
-const printDossier = () => {
-  window.print()
 }
 
 // Current patient profile metadata

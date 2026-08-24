@@ -88,9 +88,8 @@
 
           <!-- Recent Activity -->
           <div class="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col font-sans">
-            <div class="flex justify-between items-center mb-6">
+            <div class="mb-6">
               <h3 class="text-[18px] font-bold text-slate-800 font-heading">Recent Activity</h3>
-              <a href="#" class="text-[13px] font-medium text-teal-600 hover:text-teal-700">View All</a>
             </div>
 
             <!-- Loading State -->
