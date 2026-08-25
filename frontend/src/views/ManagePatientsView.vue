@@ -338,7 +338,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { api } from '../services/api'
 import { Search, Plus, Edit, Trash2, ChevronDown, X, Phone, MapPin } from 'lucide-vue-next'
 
@@ -532,16 +532,23 @@ const fetchPatients = async () => {
   try {
     const response = await api.get('/api/patients')
     if (response && response.status === 'success') {
-      patients.value = response.data.map((p: any) => ({
-        id: p.patient_id, 
-        db_id: p.id,
-        initials: (p.first_name.charAt(0) + p.last_name.charAt(0)).toUpperCase() || 'P',
-        name: `${p.first_name} ${p.last_name}`,
-        dob: p.dob,
-        gender: p.gender,
-        phone: p.phone,
-        address: p.address
-      }))
+      patients.value = response.data.map((p: any) => {
+        const fn = p.first_name || ''
+        const ln = p.last_name || ''
+        const firstInitial = fn.charAt(0) || ''
+        const lastInitial = ln.charAt(0) || ''
+        const initials = (firstInitial + lastInitial).toUpperCase() || 'P'
+        return {
+          id: p.patient_id || '',
+          db_id: p.id,
+          initials,
+          name: `${fn} ${ln}`.trim(),
+          dob: p.dob || '',
+          gender: p.gender || 'Other',
+          phone: p.phone || '',
+          address: p.address || ''
+        }
+      })
     }
   } catch (error) {
     console.error("Error fetching patients:", error)
