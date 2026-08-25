@@ -134,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { api } from '../services/api'
 import { 
   Users, 
@@ -278,8 +278,18 @@ const fetchDashboardStats = async () => {
   }
 }
 
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
   fetchDashboardStats()
+  // Auto-refresh every 30s to keep Live Data authentic
+  pollTimer = setInterval(() => {
+    fetchDashboardStats()
+  }, 30000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 
 const last7DaysInfo = computed(() => {

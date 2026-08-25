@@ -336,20 +336,21 @@
               </div>
             </div>
 
-            <!-- Table Body -->
-            <div class="overflow-x-auto">
+            <!-- Table Body with Fixed Consistent Height -->
+            <div class="overflow-x-auto min-h-[420px] flex flex-col justify-between">
               <table class="w-full text-left border-collapse whitespace-nowrap">
                 <thead class="bg-slate-800 text-white">
                   <tr>
                     <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Date</th>
                     <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Patient</th>
                     <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Record Type</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Status</th>
                     <th class="px-6 py-4 font-semibold text-[13px] tracking-wide text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-slate-50/50 transition-colors">
-                    <td class="px-6 py-5 text-sm text-slate-600 font-medium">{{ record.date }}</td>
+                    <td class="px-6 py-5 text-sm text-slate-600 font-medium">{{ formatDisplayDate(record.date) }}</td>
                     <td class="px-6 py-5">
                       <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0">
@@ -368,6 +369,12 @@
                         {{ record.recordType }}
                       </span>
                     </td>
+                    <td class="px-6 py-5">
+                      <span :class="['px-2.5 py-0.5 rounded-full text-xs font-bold border inline-flex items-center gap-1.5', record.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200']">
+                        <span class="w-1.5 h-1.5 rounded-full" :class="record.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                        {{ record.status || 'Active' }}
+                      </span>
+                    </td>
                     <td class="px-6 py-5 text-center">
                       <div class="flex items-center justify-center gap-2">
                         <button @click="viewPatientDossier(record.patientId)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100 cursor-pointer" title="View Patient Medical Dossier">
@@ -376,16 +383,16 @@
                         <button @click="openEditModal(record)" class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-transparent hover:border-teal-100 cursor-pointer" title="Edit Record">
                           <Edit class="w-4 h-4" />
                         </button>
-                        <button @click="deleteRecord(record.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100 cursor-pointer" title="Delete Record">
+                        <button @click="confirmDeleteRecord(record.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100 cursor-pointer" title="Delete Record">
                           <Trash2 class="w-4 h-4" />
                         </button>
                       </div>
                     </td>
                   </tr>
                   
-                  <!-- Empty State -->
+                  <!-- Empty State (Keeps same balanced height) -->
                   <tr v-if="filteredRecords.length === 0">
-                    <td colspan="4" class="px-6 py-12 text-center bg-slate-50/30">
+                    <td colspan="5" class="px-6 py-24 text-center bg-slate-50/30">
                       <div class="flex flex-col items-center justify-center text-slate-400">
                         <FileText class="w-12 h-12 mb-3 text-slate-300" />
                         <p class="text-[15px] font-medium text-slate-600">No health records found</p>
@@ -399,29 +406,64 @@
 
             <!-- Table Pagination Bar -->
             <div class="p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div class="text-[13px] text-slate-500 font-medium">
-                Showing {{ filteredRecords.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredRecords.length) }} of {{ filteredRecords.length }} entries
+              <!-- Showing count & Items per page -->
+              <div class="flex items-center gap-4 text-[13px] text-slate-500 font-medium flex-wrap">
+                <span>
+                  Showing {{ filteredRecords.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredRecords.length) }} of {{ filteredRecords.length }} entries
+                </span>
+                
+                <!-- Clean Custom Rows Dropdown -->
+                <div class="flex items-center gap-2 border-l border-slate-200 pl-4 relative dropdown-container">
+                  <span class="text-xs text-slate-400 font-medium">Rows:</span>
+                  <button 
+                    @click.stop="isPageSizeOpen = !isPageSizeOpen; isGenderOpen = false; isStatusOpen = false; isRangeOpen = false; isSortOpen = false" 
+                    type="button"
+                    class="h-8 px-2.5 bg-slate-50 border border-slate-200 hover:bg-white rounded-lg text-xs font-semibold text-slate-700 flex items-center gap-1.5 focus:outline-none transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <span>{{ itemsPerPage }}</span>
+                    <ChevronDown class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{'rotate-180': isPageSizeOpen}" />
+                  </button>
+
+                  <!-- Rows Menu Popover (Opens Upward cleanly) -->
+                  <div 
+                    v-if="isPageSizeOpen" 
+                    class="absolute bottom-10 left-12 w-20 bg-white border border-slate-100 rounded-xl shadow-xl z-50 overflow-hidden py-1 animate-fade-in divide-y divide-slate-50"
+                  >
+                    <div 
+                      v-for="size in pageSizeOptions" 
+                      :key="size" 
+                      @click="itemsPerPage = size; isPageSizeOpen = false" 
+                      :class="['px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors text-center', itemsPerPage === size ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-600']"
+                    >
+                      {{ size }}
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              <!-- Pagination Controls -->
               <div class="flex items-center gap-1.5">
                 <button 
                   @click="currentPage > 1 && currentPage--" 
                   :disabled="currentPage === 1"
-                  class="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                   Prev
                 </button>
-                <button 
-                  v-for="page in totalPages" 
-                  :key="page"
-                  @click="currentPage = page"
-                  :class="['w-8 h-8 flex items-center justify-center text-xs font-bold rounded-lg transition-colors', currentPage === page ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100 border border-slate-200']"
-                >
-                  {{ page }}
-                </button>
+                <template v-for="(p, pIdx) in visiblePages" :key="pIdx">
+                  <span v-if="p === '...'" class="px-2 text-xs font-bold text-slate-400 select-none">...</span>
+                  <button 
+                    v-else
+                    @click="currentPage = Number(p)"
+                    :class="['min-w-[32px] h-8 px-2 flex items-center justify-center text-xs font-bold rounded-lg transition-colors cursor-pointer', currentPage === p ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100 border border-slate-200']"
+                  >
+                    {{ p }}
+                  </button>
+                </template>
                 <button 
                   @click="currentPage < totalPages && currentPage++" 
                   :disabled="currentPage === totalPages || totalPages === 0"
-                  class="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                   Next
                 </button>
@@ -452,7 +494,7 @@
                     <label class="text-[13px] font-medium text-slate-700">Patient Name <span class="text-rose-500">*</span></label>
                     <input list="recent-patients" type="text" v-model="newRecord.patientName" @keydown.enter.prevent="recordForm?.requestSubmit()" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="recent-patients">
-                      <option v-for="p in recentPatients" :key="p.id" :value="p.name">{{ p.id }}</option>
+                      <option v-for="p in allPatients" :key="p.id" :value="p.name">{{ p.id }}</option>
                     </datalist>
                   </div>
                   <div class="space-y-1.5">
@@ -667,13 +709,13 @@
                     </div>
                   </div>
                 </div>
-                <!-- Footer -->
                 <div class="pt-6 border-t border-slate-100 flex items-center justify-end gap-3 mt-8">
-                  <button type="button" @click="isAddModalOpen = false" class="px-5 py-2.5 text-[14px] font-semibold text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                  <button type="button" @click="isAddModalOpen = false" :disabled="isSaving" class="px-5 py-2.5 text-[14px] font-semibold text-slate-600 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-40">
                     Cancel
                   </button>
-                  <button type="submit" class="px-5 py-2.5 text-[14px] font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors shadow-sm">
-                    {{ editingRecordId ? 'Update Record' : 'Save Record' }}
+                  <button type="submit" :disabled="isSaving" class="px-5 py-2.5 text-[14px] font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2">
+                    <span v-if="isSaving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>{{ isSaving ? 'Saving...' : (editingRecordId ? 'Update Record' : 'Save Record') }}</span>
                   </button>
                 </div>
               </form>
@@ -694,7 +736,61 @@
           </div>
           <img :src="previewImageUrl" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain ring-1 ring-white/20" alt="Preview" />
         </div>
+    </div>
+
+    <!-- ── Modern Clean Toast Notifications ────────────────────────────── -->
+    <div class="fixed bottom-6 right-6 z-[200] flex flex-col gap-2.5 pointer-events-none">
+      <transition-group name="toast">
+        <div
+          v-for="toast in toasts"
+          :key="toast.id"
+          :class="[
+            'flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-[13px] font-semibold pointer-events-auto border backdrop-blur-md transition-all duration-300 min-w-[280px] max-w-[400px]',
+            toast.type === 'success' ? 'bg-slate-900/95 text-white border-slate-800 shadow-slate-900/20' :
+            toast.type === 'error'   ? 'bg-rose-900/95 text-white border-rose-800 shadow-rose-900/20' :
+                                       'bg-slate-900/95 text-white border-slate-800'
+          ]"
+        >
+          <div 
+            :class="[
+              'w-6 h-6 rounded-full flex items-center justify-center shrink-0',
+              toast.type === 'success' ? 'bg-teal-500/20 text-teal-400' :
+              toast.type === 'error'   ? 'bg-rose-500/20 text-rose-400' :
+                                         'bg-slate-500/20 text-slate-300'
+            ]"
+          >
+            <CheckCircle2 v-if="toast.type === 'success'" class="w-4 h-4" />
+            <AlertCircle v-else-if="toast.type === 'error'" class="w-4 h-4" />
+            <Info v-else class="w-4 h-4" />
+          </div>
+          <span class="flex-1 leading-snug tracking-normal">{{ toast.message }}</span>
+        </div>
+      </transition-group>
+    </div>
+
+    <!-- ── Delete Confirmation Modal ───────────────────────────────────── -->
+    <div v-if="showDeleteConfirm" class="fixed inset-0 z-[150] flex items-center justify-center">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="cancelDelete"></div>
+      <div class="relative bg-white rounded-2xl shadow-2xl p-6 mx-4 max-w-sm w-full animate-scale-up">
+        <div class="flex flex-col items-center text-center gap-3">
+          <div class="w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center">
+            <Trash2 class="w-7 h-7 text-rose-500" />
+          </div>
+          <h3 class="text-[17px] font-bold text-slate-800">Delete Health Record?</h3>
+          <p class="text-[13px] text-slate-500 leading-relaxed">This action cannot be undone. The record will be permanently removed from the system.</p>
+        </div>
+        <div class="flex gap-3 mt-6">
+          <button @click="cancelDelete" class="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button @click="pendingDeleteId && deleteRecord(pendingDeleteId)" :disabled="isDeleting" class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2">
+            <span v-if="isDeleting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>{{ isDeleting ? 'Deleting...' : 'Yes, Delete' }}</span>
+          </button>
+        </div>
       </div>
+    </div>
+
   </div>
 </template>
 
@@ -704,7 +800,7 @@ import { api } from '../services/api'
 import { 
   Activity, Users, FileText, Plus, Trash2, 
   Search, HeartPulse, LineChart, ChevronDown, X, User, Edit, Eye, Download, ArrowLeft, Clock, CalendarDays,
-  Scale, FileCheck
+  Scale, FileCheck, CheckCircle2, AlertCircle, Info
 } from 'lucide-vue-next'
 
 // TypeScript Interfaces for strict typing
@@ -743,7 +839,34 @@ const isRangeOpen = ref(false)
 const filterRange = ref('(Last Month)')
 const isSortOpen = ref(false)
 const currentSort = ref('Newest First')
+const isPageSizeOpen = ref(false)
 const searchQuery = ref('')
+
+// ── Toast Notification System ──────────────────────────────────────────────
+interface Toast { id: number; type: 'success' | 'error' | 'info'; message: string }
+const toasts = ref<Toast[]>([])
+let toastId = 0
+const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const id = ++toastId
+  toasts.value.push({ id, type, message })
+  setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, 3500)
+}
+
+// ── Loading / Double-Submit Guard ──────────────────────────────────────────
+const isSaving = ref(false)
+const isDeleting = ref(false)
+
+// ── Delete Confirmation Modal ──────────────────────────────────────────────
+const showDeleteConfirm = ref(false)
+const pendingDeleteId = ref<string | null>(null)
+const confirmDeleteRecord = (id: string) => {
+  pendingDeleteId.value = id
+  showDeleteConfirm.value = true
+}
+const cancelDelete = () => {
+  showDeleteConfirm.value = false
+  pendingDeleteId.value = null
+}
 
 // State for Dedicated Patient Dossier View
 const selectedPatientId = ref<string | null>(null)
@@ -969,7 +1092,31 @@ interface RecentPatient {
   timestamp: number;
 }
 
+interface SystemPatient {
+  id: string;
+  name: string;
+  gender?: string;
+  dob?: string;
+}
+
+const allPatients = ref<SystemPatient[]>([])
 const recentPatients = ref<RecentPatient[]>([])
+
+const fetchAllPatientsList = async () => {
+  try {
+    const res = await api.get('/api/patients')
+    if (res && res.status === 'success' && Array.isArray(res.data)) {
+      allPatients.value = res.data.map((p: any) => ({
+        id: p.patient_id,
+        name: `${p.first_name || ''} ${p.last_name || ''}`.trim(),
+        gender: p.gender || 'Male',
+        dob: p.dob || ''
+      }))
+    }
+  } catch (e) {
+    console.error('Failed to load patient directory', e)
+  }
+}
 
 const loadRecentPatients = () => {
   try {
@@ -988,6 +1135,7 @@ const loadRecentPatients = () => {
 
 onMounted(() => {
   loadRecentPatients()
+  fetchAllPatientsList()
   fetchRecords()
 })
 
@@ -1011,13 +1159,21 @@ const newRecord = ref<HealthRecordForm>({
 
 watch(() => newRecord.value.patientName, (newName) => {
   if (!newName) return
-  const q = newName.toLowerCase()
-  const p = recentPatients.value.find(rp => rp.name.toLowerCase() === q)
-  if (p) {
-    newRecord.value.patientId = p.id
-    // Optionally auto-correct the case to match the DB exactly
-    if (newRecord.value.patientName !== p.name) {
-      newRecord.value.patientName = p.name
+  const q = newName.trim().toLowerCase()
+  // 1. Search in full registered patients directory
+  const sysPatient = allPatients.value.find(p => p.name.toLowerCase() === q || p.id.toLowerCase() === q)
+  if (sysPatient) {
+    newRecord.value.patientName = sysPatient.name
+    newRecord.value.patientId = sysPatient.id
+    if (sysPatient.gender) newRecord.value.gender = sysPatient.gender
+    return
+  }
+  // 2. Fallback to recent patients list
+  const recentP = recentPatients.value.find(rp => rp.name.toLowerCase() === q || rp.id.toLowerCase() === q)
+  if (recentP) {
+    newRecord.value.patientId = recentP.id
+    if (newRecord.value.patientName !== recentP.name) {
+      newRecord.value.patientName = recentP.name
     }
   }
 })
@@ -1092,6 +1248,7 @@ const filteredRecords = computed(() => {
 // Pagination State
 const currentPage = ref(1)
 const itemsPerPage = ref(6)
+const pageSizeOptions = [6, 10, 20, 50]
 
 const totalPages = computed(() => {
   return Math.ceil(filteredRecords.value.length / itemsPerPage.value) || 1
@@ -1102,8 +1259,32 @@ const paginatedRecords = computed(() => {
   return filteredRecords.value.slice(start, start + itemsPerPage.value)
 })
 
-// Reset to page 1 when filters change
-watch([searchQuery, filterGender, filterStatus, currentSort], () => {
+// Smart visible page numbers with ellipsis (e.g. 1, 2, ..., 10)
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  const current = currentPage.value
+  const pages: (number | string)[] = []
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (current > 3) pages.push('...')
+    
+    const start = Math.max(2, current - 1)
+    const end = Math.min(total - 1, current + 1)
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+
+    if (current < total - 2) pages.push('...')
+    pages.push(total)
+  }
+  return pages
+})
+
+// Reset to page 1 when filters or page size change
+watch([searchQuery, filterGender, filterStatus, currentSort, itemsPerPage], () => {
   currentPage.value = 1
 })
 
@@ -1160,7 +1341,8 @@ const openAddModal = () => {
   editingRecordId.value = null
   selectedFiles.value = []
   existingAttachments.value = []
-  loadRecentPatients() // Refresh list on open
+  loadRecentPatients()
+  fetchAllPatientsList() // Freshly fetch directory from DB on modal open
   
   isTypeOpen.value = false
   isDateOpen.value = false
@@ -1251,21 +1433,35 @@ const fetchRecords = async () => {
       }))
     }
   } catch (error) {
+    showToast('Failed to load health records. Please check your connection.', 'error')
     console.error("Failed to fetch records:", error)
   }
 }
 
+// Format date YYYY-MM-DD → DD MMM YYYY (Bug #8 fix)
+const formatDisplayDate = (dateStr: string) => {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr + 'T00:00:00')
+  if (isNaN(d.getTime())) return dateStr
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
 const deleteRecord = async (id: string) => {
-  if (confirm('Are you sure you want to delete this health record?')) {
-    const recordToDelete = records.value.find(r => r.id === id);
-    if (recordToDelete && recordToDelete.db_id) {
-      try {
-        await api.delete(`/api/health-records/${recordToDelete.db_id}`);
-        fetchRecords(); // refresh the list
-      } catch (error) {
-        console.error("Delete failed", error);
-      }
-    }
+  if (isDeleting.value) return
+  const recordToDelete = records.value.find(r => r.id === id)
+  if (!recordToDelete || !recordToDelete.db_id) return
+  isDeleting.value = true
+  showDeleteConfirm.value = false
+  pendingDeleteId.value = null
+  try {
+    await api.delete(`/api/health-records/${recordToDelete.db_id}`)
+    await fetchRecords()
+    showToast('Health record deleted successfully.', 'success')
+  } catch (error) {
+    showToast('Failed to delete record. Please try again.', 'error')
+    console.error("Delete failed", error)
+  } finally {
+    isDeleting.value = false
   }
 }
 
@@ -1299,6 +1495,10 @@ const removeExistingAttachment = (index: number) => {
 
 const saveRecord = async () => {
   if (!newRecord.value.patientName) return
+  if (isSaving.value) return  // prevent double-submit
+
+  isSaving.value = true
+  const isEdit = !!editingRecordId.value
 
   const payload = new FormData()
   payload.append('patient_name', newRecord.value.patientName)
@@ -1325,13 +1525,12 @@ const saveRecord = async () => {
 
   try {
     if (editingRecordId.value) {
-      const recordToEdit = records.value.find(r => r.id === editingRecordId.value);
+      const recordToEdit = records.value.find(r => r.id === editingRecordId.value)
       if (recordToEdit && recordToEdit.db_id) {
-        await api.postFormData(`/api/health-records/${recordToEdit.db_id}`, payload);
+        await api.postFormData(`/api/health-records/${recordToEdit.db_id}`, payload)
       }
     } else {
-      await api.postFormData('/api/health-records', payload);
-      
+      await api.postFormData('/api/health-records', payload)
       // Remove from recent patients suggestions once a record is added
       try {
         const stored = localStorage.getItem('recentPatients')
@@ -1344,10 +1543,18 @@ const saveRecord = async () => {
       } catch (e) {}
     }
     
-    isAddModalOpen.value = false;
-    fetchRecords(); // Refresh the list from the database
+    isAddModalOpen.value = false
+    if (!isEdit) {
+      currentSort.value = 'Newest First'
+      currentPage.value = 1 // Immediately display Page 1 to see the new record on top
+    }
+    await fetchRecords()  // await so data is fresh before UI shows
+    showToast(isEdit ? 'Health record updated successfully.' : 'Health record added successfully.', 'success')
   } catch (error) {
-    console.error("Save failed", error);
+    showToast('Failed to save record. Please try again.', 'error')
+    console.error("Save failed", error)
+  } finally {
+    isSaving.value = false
   }
 }
 
@@ -1357,6 +1564,7 @@ const closeAllDropdowns = () => {
   isStatusOpen.value = false
   isRangeOpen.value = false
   isSortOpen.value = false
+  isPageSizeOpen.value = false
 }
 
 // Global click outside listener
