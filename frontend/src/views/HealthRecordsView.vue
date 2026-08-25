@@ -1,8 +1,6 @@
 <template>
   <div class="px-8 py-8 bg-slate-50/60 min-h-full">
-    <!-- ========================================================================= -->
-    <!-- VIEW 1: DEDICATED PATIENT MEDICAL DOSSIER VIEW (Full Page History) -->
-    <!-- ========================================================================= -->
+    
         <div v-if="selectedPatientId" class="space-y-6 animate-fade-in">
           <!-- Back Navigation & Action Bar -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
@@ -279,9 +277,9 @@
                 <div class="flex flex-wrap gap-4">
                   
                   <!-- Custom Gender Dropdown -->
-                  <div class="flex flex-col gap-1 relative">
+                  <div class="flex flex-col gap-1 relative dropdown-container">
                     <label class="text-[12px] font-semibold text-slate-700">Gender</label>
-                    <button @click="isGenderOpen = !isGenderOpen; isStatusOpen = false; isRangeOpen = false; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                    <button @click.stop="isGenderOpen = !isGenderOpen; isStatusOpen = false; isRangeOpen = false; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
                       <span class="truncate block w-full">{{ filterGender }}</span>
                       <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isGenderOpen}" />
                     </button>
@@ -293,9 +291,9 @@
                   </div>
 
                   <!-- Custom Status Dropdown -->
-                  <div class="flex flex-col gap-1 relative">
+                  <div class="flex flex-col gap-1 relative dropdown-container">
                     <label class="text-[12px] font-semibold text-slate-700">Status</label>
-                    <button @click="isStatusOpen = !isStatusOpen; isGenderOpen = false; isRangeOpen = false; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                    <button @click.stop="isStatusOpen = !isStatusOpen; isGenderOpen = false; isRangeOpen = false; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
                       <span class="truncate block w-full">{{ filterStatus }}</span>
                       <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isStatusOpen}" />
                     </button>
@@ -306,9 +304,9 @@
                   </div>
 
                   <!-- Custom Range Dropdown -->
-                  <div class="flex flex-col gap-1 relative">
+                  <div class="flex flex-col gap-1 relative dropdown-container">
                     <label class="text-[12px] font-semibold text-slate-700">Last Visited</label>
-                    <button @click="isRangeOpen = !isRangeOpen; isGenderOpen = false; isStatusOpen = false; isSortOpen = false" class="relative w-[130px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                    <button @click.stop="isRangeOpen = !isRangeOpen; isGenderOpen = false; isStatusOpen = false; isSortOpen = false" class="relative w-[130px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
                       <span class="truncate block w-full">{{ filterRange }}</span>
                       <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isRangeOpen}" />
                     </button>
@@ -320,9 +318,9 @@
                   </div>
 
                   <!-- Custom Sort Dropdown -->
-                  <div class="flex flex-col gap-1 relative">
+                  <div class="flex flex-col gap-1 relative dropdown-container">
                     <label class="text-[12px] font-semibold text-slate-700">Sort By</label>
-                    <button @click="isSortOpen = !isSortOpen; isGenderOpen = false; isStatusOpen = false; isRangeOpen = false" class="relative w-[140px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                    <button @click.stop="isSortOpen = !isSortOpen; isGenderOpen = false; isStatusOpen = false; isRangeOpen = false" class="relative w-[140px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
                       <span class="truncate block w-full">{{ currentSort }}</span>
                       <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isSortOpen}" />
                     </button>
@@ -1352,4 +1350,29 @@ const saveRecord = async () => {
     console.error("Save failed", error);
   }
 }
+
+// Close all table dropdowns
+const closeAllDropdowns = () => {
+  isGenderOpen.value = false
+  isStatusOpen.value = false
+  isRangeOpen.value = false
+  isSortOpen.value = false
+}
+
+// Global click outside listener
+const handleGlobalClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement | null
+  if (target && !target.closest('.dropdown-container')) {
+    closeAllDropdowns()
+  }
+}
+
+onMounted(() => {
+  fetchRecords()
+  window.addEventListener('click', handleGlobalClick)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleGlobalClick)
+})
 </script>

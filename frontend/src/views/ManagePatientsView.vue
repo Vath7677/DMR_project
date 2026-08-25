@@ -23,9 +23,9 @@
               
               <div class="flex flex-wrap gap-4">
                 <!-- Custom Gender Dropdown -->
-                <div class="flex flex-col gap-1 relative">
+                <div class="flex flex-col gap-1 relative dropdown-container">
                   <label class="text-[12px] font-semibold text-slate-700">Gender</label>
-                  <button @click="isGenderOpen = !isGenderOpen; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                  <button @click.stop="isGenderOpen = !isGenderOpen; isSortOpen = false" class="relative w-[120px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
                     <span class="truncate block w-full">{{ filterGender }}</span>
                     <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isGenderOpen}" />
                   </button>
@@ -37,9 +37,9 @@
                 </div>
 
                 <!-- Custom Sort Dropdown -->
-                <div class="flex flex-col gap-1 relative">
+                <div class="flex flex-col gap-1 relative dropdown-container">
                   <label class="text-[12px] font-semibold text-slate-700">Sort By</label>
-                  <button @click="isSortOpen = !isSortOpen; isGenderOpen = false" class="relative w-[140px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
+                  <button @click.stop="isSortOpen = !isSortOpen; isGenderOpen = false" class="relative w-[140px] py-2.5 pl-3 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600 focus:outline-none cursor-pointer flex items-center hover:bg-white transition-colors text-left shadow-sm">
                     <span class="truncate block w-full">{{ currentSort }}</span>
                     <ChevronDown class="absolute right-3 w-4 h-4 text-slate-400 pointer-events-none transition-transform duration-200" :class="{'rotate-180': isSortOpen}" />
                   </button>
@@ -634,7 +634,26 @@ const savePatient = async () => {
   }
 }
 
+// Close all table dropdowns
+const closeAllDropdowns = () => {
+  isGenderOpen.value = false
+  isSortOpen.value = false
+}
+
+// Global click outside listener
+const handleGlobalClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement | null
+  if (target && !target.closest('.dropdown-container')) {
+    closeAllDropdowns()
+  }
+}
+
 onMounted(() => {
   fetchPatients()
+  window.addEventListener('click', handleGlobalClick)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleGlobalClick)
 })
 </script>
