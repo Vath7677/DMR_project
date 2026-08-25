@@ -340,36 +340,45 @@
 
             <!-- Table Body -->
             <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
+              <table class="w-full text-left border-collapse whitespace-nowrap">
                 <thead class="bg-slate-800 text-white">
                   <tr>
-                    <th class="w-1/4 px-6 py-3.5 font-semibold text-[13px] tracking-wide">Date</th>
-                    <th class="w-1/3 px-6 py-3.5 font-semibold text-[13px] tracking-wide">Patient</th>
-                    <th class="w-1/4 px-6 py-3.5 font-semibold text-[13px] tracking-wide">Record Type</th>
-                    <th class="px-6 py-3.5 font-semibold text-[13px] tracking-wide text-right pr-8">Actions</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Date</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Patient</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Record Type</th>
+                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                  <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-slate-50/60 transition-colors">
-                    <td class="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">{{ record.date }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="font-bold text-slate-800 text-sm hover:text-teal-600 cursor-pointer transition-colors inline-block" @click="viewPatientDossier(record.patientId)">
-                        {{ record.patientName }}
+                  <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-5 text-sm text-slate-600 font-medium">{{ record.date }}</td>
+                    <td class="px-6 py-5">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          {{ record.patientName.charAt(0).toUpperCase() }}
+                        </div>
+                        <div>
+                          <div class="font-bold text-slate-800 text-sm hover:text-teal-600 cursor-pointer transition-colors" @click="viewPatientDossier(record.patientId)">
+                            {{ record.patientName }}
+                          </div>
+                          <div class="text-xs text-slate-400 mt-0.5">({{ record.patientId }})</div>
+                        </div>
                       </div>
-                      <span class="text-xs text-slate-400 ml-1.5">({{ record.patientId }})</span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span :class="['px-3 py-1 rounded-full text-xs font-bold border inline-flex items-center', getBadgeClass(record.recordType)]">{{ record.recordType }}</span>
+                    <td class="px-6 py-5">
+                      <span :class="['px-3 py-1 rounded-full text-xs font-bold border inline-flex items-center', getBadgeClass(record.recordType)]">
+                        {{ record.recordType }}
+                      </span>
                     </td>
-                    <td class="px-6 py-4 text-right pr-6 whitespace-nowrap">
-                      <div class="inline-flex items-center justify-end gap-2.5">
-                        <button @click="viewPatientDossier(record.patientId)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100 cursor-pointer" title="View Patient Medical Dossier">
+                    <td class="px-6 py-5 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button @click="viewPatientDossier(record.patientId)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100 cursor-pointer" title="View Patient Medical Dossier">
                           <Eye class="w-4 h-4" />
                         </button>
-                        <button @click="openEditModal(record)" class="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-transparent hover:border-teal-100 cursor-pointer" title="Edit Record">
+                        <button @click="openEditModal(record)" class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-transparent hover:border-teal-100 cursor-pointer" title="Edit Record">
                           <Edit class="w-4 h-4" />
                         </button>
-                        <button @click="deleteRecord(record.id)" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100 cursor-pointer" title="Delete Record">
+                        <button @click="deleteRecord(record.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100 cursor-pointer" title="Delete Record">
                           <Trash2 class="w-4 h-4" />
                         </button>
                       </div>
@@ -378,11 +387,11 @@
                   
                   <!-- Empty State -->
                   <tr v-if="filteredRecords.length === 0">
-                    <td colspan="4" class="px-6 py-12 text-center">
+                    <td colspan="4" class="px-6 py-12 text-center bg-slate-50/30">
                       <div class="flex flex-col items-center justify-center text-slate-400">
-                        <FileText class="w-10 h-10 mb-2.5 text-slate-300" />
-                        <p class="text-sm font-medium text-slate-600">No health records found</p>
-                        <p class="text-xs mt-0.5 text-slate-400">Try adjusting your filters or search query.</p>
+                        <FileText class="w-12 h-12 mb-3 text-slate-300" />
+                        <p class="text-[15px] font-medium text-slate-600">No health records found</p>
+                        <p class="text-[13px] mt-1 text-slate-400">Try adjusting your filters or search query.</p>
                       </div>
                     </td>
                   </tr>
@@ -391,7 +400,7 @@
             </div>
 
             <!-- Table Pagination Bar -->
-            <div class="p-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
               <div class="text-[13px] text-slate-500 font-medium">
                 Showing {{ filteredRecords.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredRecords.length) }} of {{ filteredRecords.length }} entries
               </div>
@@ -399,7 +408,7 @@
                 <button 
                   @click="currentPage > 1 && currentPage--" 
                   :disabled="currentPage === 1"
-                  class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   Prev
                 </button>
@@ -414,7 +423,7 @@
                 <button 
                   @click="currentPage < totalPages && currentPage++" 
                   :disabled="currentPage === totalPages || totalPages === 0"
-                  class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  class="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                 </button>
