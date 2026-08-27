@@ -1,8 +1,8 @@
-# 🏥 DMR Hospital Portal (Hospital Management System)
+# DMR Hospital Portal (Hospital Management System)
 
 A comprehensive, secure, and modern healthcare management dashboard designed to streamline clinic and hospital operations. Built with a Vue.js 3 frontend and a robust PHP backend.
 
-## ✨ Key Features
+## Key Features
 - **🔐 Secure Authentication:** Encrypted passwords (Bcrypt) and secure session management.
 - **👥 Patient Management:** Complete CRUD operations for patient profiles and demographics.
 - **📂 Health Records:** Track diagnoses, treatments, vitals (BMI, Blood Pressure), and upload medical attachments.
@@ -29,7 +29,7 @@ A comprehensive, secure, and modern healthcare management dashboard designed to 
 
 ---
 
-## 🚀 Quick Start (Recommended: Docker)
+## Quick Start (Recommended: Docker)
 
 The easiest way to run the backend and database is using Docker. You do not need to install PHP, MySQL, or XAMPP on your host machine.
 
@@ -55,7 +55,7 @@ The easiest way to run the backend and database is using Docker. You do not need
 
 ---
 
-## 🛡️ Security Highlights
+## Security Highlights
 This project has been heavily reviewed for security best practices:
 - **SQL Injection Prevention:** Utilizes Eloquent ORM Parameterized Queries to prevent payload execution.
 - **Data Encryption:** User passwords are not stored in plain text. They are securely hashed using PHP's native `password_hash()` (Bcrypt algorithm) and verified via `password_verify()`.
