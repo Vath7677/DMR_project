@@ -16,8 +16,36 @@ const router = createRouter({
     { path: '/health-records', name: 'health-records', component: HealthRecords },
     { path: '/reports', name: 'reports', component: Reports },
     { path: '/users', name: 'users', component: ManageUsers },
-    { path: '/settings', name: 'settings', component: Settings }
+    { path: '/settings', name: 'settings', component: Settings },
+    { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
   ]
+})
+
+// 🛡️ Global Auth & RBAC Navigation Guard
+router.beforeEach((to, from, next) => {
+  const publicPages = ['/']
+  const authRequired = !publicPages.includes(to.path)
+  const loggedIn = localStorage.getItem('userEmail')
+
+  // If page requires auth and user is not logged in, redirect to Login
+  if (authRequired && !loggedIn) {
+    return next('/')
+  }
+
+  // If user is already logged in and attempts to visit login page, redirect to Dashboard
+  if (to.path === '/' && loggedIn) {
+    return next('/dashboard')
+  }
+
+  // If user attempts to visit /users but is not a superadmin, redirect to Dashboard
+  if (to.path === '/users') {
+    const role = localStorage.getItem('userRole') || 'doctor'
+    if (role !== 'superadmin') {
+      return next('/dashboard')
+    }
+  }
+
+  next()
 })
 
 export default router

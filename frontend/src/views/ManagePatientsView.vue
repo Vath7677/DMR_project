@@ -54,16 +54,16 @@
             </div>
           </div>
 
-          <div class="overflow-x-auto min-h-[420px] flex flex-col justify-between">
+          <div class="overflow-x-auto min-h-[440px] flex flex-col">
             <table class="w-full text-left border-collapse whitespace-nowrap">
               <thead class="bg-slate-800 text-white">
-                <tr>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Patient ID</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Name</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Date of Birth</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Gender</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Phone</th>
-                  <th class="px-6 py-4 font-semibold text-[13px] tracking-wide text-center">Actions</th>
+                <tr class="h-12">
+                  <th class="px-6 font-semibold text-[13px] tracking-wide">Patient ID</th>
+                  <th class="px-6 font-semibold text-[13px] tracking-wide">Name</th>
+                  <th class="px-6 font-semibold text-[13px] tracking-wide">Date of Birth</th>
+                  <th class="px-6 font-semibold text-[13px] tracking-wide">Gender</th>
+                  <th class="px-6 font-semibold text-[13px] tracking-wide">Phone</th>
+                  <th class="px-6 font-semibold text-[13px] tracking-wide text-center">Actions</th>
                 </tr>
               </thead>
 
@@ -81,16 +81,16 @@
                 </tr>
 
                 <!-- Patient Rows -->
-                <tr v-for="patient in paginatedPatients" :key="patient.id" class="hover:bg-slate-50/50 transition-colors animate-fade-in">
-                  <td class="px-6 py-5 text-sm font-medium text-slate-500">{{ patient.id }}</td>
-                  <td class="px-6 py-5">
+                <tr v-for="patient in paginatedPatients" :key="patient.id" class="h-[68px] hover:bg-slate-50/50 transition-colors animate-fade-in">
+                  <td class="px-6 py-4 text-sm font-medium text-slate-500">{{ patient.id }}</td>
+                  <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                       <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">{{ patient.initials }}</div>
                       <div class="font-bold text-slate-800 text-sm">{{ patient.name }}</div>
                     </div>
                   </td>
-                  <td class="px-6 py-5 text-sm text-slate-600">{{ formatDate(patient.dob) }}</td>
-                  <td class="px-6 py-5">
+                  <td class="px-6 py-4 text-sm text-slate-600">{{ formatDate(patient.dob) }}</td>
+                  <td class="px-6 py-4">
                     <span :class="{
                       'px-3 py-1 bg-pink-50 text-pink-700 rounded-full text-xs font-bold border border-pink-100': patient.gender === 'Female',
                       'px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-100': patient.gender === 'Male',
@@ -99,11 +99,11 @@
                       {{ patient.gender }}
                     </span>
                   </td>
-                  <td class="px-6 py-5 text-sm text-slate-600">
+                  <td class="px-6 py-4 text-sm text-slate-600">
                     <span v-if="patient.phone">{{ patient.phone }}</span>
                     <span v-else class="text-slate-400 font-medium">—</span>
                   </td>
-                  <td class="px-6 py-5 text-center">
+                  <td class="px-6 py-4 text-center">
                     <div class="flex items-center justify-center gap-2">
                       <button @click="openViewModal(patient)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100 cursor-pointer" title="View Details">
                         <Eye class="w-4 h-4" />

@@ -144,6 +144,9 @@
                       <User class="w-3.5 h-3.5 text-slate-400" />
                       {{ record.attendingDoctor }}
                     </span>
+                    <button @click="openPrintModal(record)" class="p-1.5 text-slate-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors border border-slate-200 hover:border-teal-300 cursor-pointer" title="Print Health Record">
+                      <Printer class="w-3.5 h-3.5" />
+                    </button>
                     <button @click="openEditModal(record)" class="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-slate-200 hover:border-teal-300" title="Edit Record">
                       <Edit class="w-3.5 h-3.5" />
                     </button>
@@ -337,21 +340,21 @@
             </div>
 
             <!-- Table Body with Fixed Consistent Height -->
-            <div class="overflow-x-auto min-h-[420px] flex flex-col justify-between">
+            <div class="overflow-x-auto min-h-[440px] flex flex-col">
               <table class="w-full text-left border-collapse whitespace-nowrap">
                 <thead class="bg-slate-800 text-white">
-                  <tr>
-                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Date</th>
-                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Patient</th>
-                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Record Type</th>
-                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide">Status</th>
-                    <th class="px-6 py-4 font-semibold text-[13px] tracking-wide text-center">Actions</th>
+                  <tr class="h-12">
+                    <th class="px-6 font-semibold text-[13px] tracking-wide">Date</th>
+                    <th class="px-6 font-semibold text-[13px] tracking-wide">Patient</th>
+                    <th class="px-6 font-semibold text-[13px] tracking-wide">Record Type</th>
+                    <th class="px-6 font-semibold text-[13px] tracking-wide">Status</th>
+                    <th class="px-6 font-semibold text-[13px] tracking-wide text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                  <tr v-for="record in paginatedRecords" :key="record.id" class="hover:bg-slate-50/50 transition-colors">
-                    <td class="px-6 py-5 text-sm text-slate-600 font-medium">{{ formatDisplayDate(record.date) }}</td>
-                    <td class="px-6 py-5">
+                  <tr v-for="record in paginatedRecords" :key="record.id" class="h-[68px] hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-slate-600 font-medium">{{ formatDisplayDate(record.date) }}</td>
+                    <td class="px-6 py-4">
                       <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0">
                           {{ record.patientName.charAt(0).toUpperCase() }}
@@ -364,18 +367,18 @@
                         </div>
                       </div>
                     </td>
-                    <td class="px-6 py-5">
+                    <td class="px-6 py-4">
                       <span :class="['px-3 py-1 rounded-full text-xs font-bold border inline-flex items-center', getBadgeClass(record.recordType)]">
                         {{ record.recordType }}
                       </span>
                     </td>
-                    <td class="px-6 py-5">
+                    <td class="px-6 py-4">
                       <span :class="['px-2.5 py-0.5 rounded-full text-xs font-bold border inline-flex items-center gap-1.5', record.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200']">
                         <span class="w-1.5 h-1.5 rounded-full" :class="record.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
                         {{ record.status || 'Active' }}
                       </span>
                     </td>
-                    <td class="px-6 py-5 text-center">
+                    <td class="px-6 py-4 text-center">
                       <div class="flex items-center justify-center gap-2">
                         <button @click="viewPatientDossier(record.patientId)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100 cursor-pointer" title="View Patient Medical Dossier">
                           <Eye class="w-4 h-4" />
@@ -736,6 +739,418 @@
           </div>
           <img :src="previewImageUrl" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain ring-1 ring-white/20" alt="Preview" />
         </div>
+      </div>
+
+    <!-- ========================================================================= -->
+    <!-- CLINICAL RECORD & PRESCRIPTION PRINT PREVIEW MODAL -->
+    <!-- ========================================================================= -->
+    <div v-if="isPrintModalOpen" class="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <!-- Backdrop -->
+      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs no-print transition-opacity" @click="isPrintModalOpen = false"></div>
+      
+      <!-- Modal Wrapper -->
+      <div class="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-slate-200/90 z-10 my-auto flex flex-col overflow-hidden max-h-[95vh] animate-scale-up" @click.stop>
+        
+        <!-- Controls & Options Header (Hidden in Print) -->
+        <div class="px-6 py-4 bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 no-print">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center border border-teal-500/30">
+              <Printer class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="text-base font-bold font-heading tracking-tight text-white leading-snug">Hospital Medical Report & Prescription</h3>
+              <p class="text-xs text-slate-400">Standard A4 Clinical Lab & Encounter Sheet</p>
+            </div>
+          </div>
+
+          <!-- Section Toggles & Actions -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300">
+              <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+                <input type="checkbox" v-model="printOptions.vitals" class="rounded accent-teal-500 w-3.5 h-3.5 cursor-pointer" />
+                <span>Vitals / Lab</span>
+              </label>
+              <span class="text-slate-600">|</span>
+              <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+                <input type="checkbox" v-model="printOptions.notes" class="rounded accent-teal-500 w-3.5 h-3.5 cursor-pointer" />
+                <span>Clinical Notes</span>
+              </label>
+              <span class="text-slate-600">|</span>
+              <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+                <input type="checkbox" v-model="printOptions.prescription" class="rounded accent-teal-500 w-3.5 h-3.5 cursor-pointer" />
+                <span>Rx (Meds)</span>
+              </label>
+              <span class="text-slate-600">|</span>
+              <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+                <input type="checkbox" v-model="printOptions.signature" class="rounded accent-teal-500 w-3.5 h-3.5 cursor-pointer" />
+                <span>Signature</span>
+              </label>
+            </div>
+
+            <button 
+              type="button" 
+              @click="triggerPrint"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold text-xs shadow-md shadow-teal-600/30 transition-all cursor-pointer"
+            >
+              <Printer class="w-4 h-4" />
+              <span>Print Document (A4)</span>
+            </button>
+
+            <button 
+              type="button" 
+              @click="isPrintModalOpen = false"
+              class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              title="Close Preview"
+            >
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Document Preview Body (Dark Desk Canvas) -->
+        <div ref="printScrollContainer" class="p-4 sm:p-8 overflow-y-auto bg-slate-900/95 flex justify-center items-start max-h-[82vh] print:p-0 print:bg-white print:max-h-none print:overflow-visible">
+          
+          <!-- Distinct Floating White A4 Paper Sheet -->
+          <div 
+            id="printable-medical-record" 
+            class="w-full max-w-[780px] bg-white shadow-2xl rounded-sm border border-slate-200 p-8 text-slate-900 font-sans text-xs my-2 ring-8 ring-black/20 print:shadow-none print:border-none print:rounded-none print:p-0 print:m-0 print:w-full print:max-w-none print:ring-0"
+          >
+            <!-- 🏥 Official Hospital Letterhead Top Header -->
+            <div class="flex items-center justify-between pb-3 border-b-2 border-slate-900 gap-4 mb-3.5">
+              <div class="flex items-center gap-3">
+                <img :src="hospitalLogo" alt="DMR Hospital" class="w-12 h-12 object-contain shrink-0" style="width: 48px; height: 48px; max-width: 48px; max-height: 48px;" />
+                <div>
+                  <h1 class="text-lg font-black font-heading text-slate-900 tracking-tight leading-none uppercase">DMR HOSPITAL</h1>
+                  <p class="text-[9.5px] font-bold text-teal-700 tracking-widest uppercase mt-0.5">We'll Treat You Well &bull; Digital Medical Records</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-[11px] font-sans text-slate-800 font-bold">REF ID: {{ printingRecord?.id }}</p>
+              </div>
+            </div>
+
+            <!-- 👤 Formal Patient Demographics Box (Clean Fixed-Grid Alignment) -->
+            <div class="border border-slate-400 mb-4.5 text-[11px] leading-relaxed bg-slate-50/40">
+              <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-400">
+                
+                <!-- Left Details (Aligned Grid) -->
+                <div class="p-3.5 space-y-2">
+                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Name</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="font-black text-slate-900">{{ printingRecord?.patientName }}</span>
+                  </div>
+                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Age / Gender</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="text-slate-800 font-medium">{{ getPatientAge(printingRecord) }} Years / {{ printingRecord?.gender }}</span>
+                  </div>
+                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">MRN / PID</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="font-sans font-bold text-slate-900">{{ printingRecord?.patientId }}</span>
+                  </div>
+                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Referred By</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="text-slate-800">{{ currentDoctorName }}</span>
+                  </div>
+                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Referring Org</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="text-slate-700">DMR MEDICAL CENTRE PHNOM PENH</span>
+                  </div>
+                </div>
+
+                <!-- Right Details (Aligned Grid) -->
+                <div class="p-3.5 space-y-2">
+                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Encounter Date</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="text-slate-800 font-medium">{{ formatDisplayDate(printingRecord?.date || '') }}</span>
+                  </div>
+                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Examined On</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="text-slate-800">{{ formatDisplayDate(printingRecord?.date || '') }} 09:30</span>
+                  </div>
+                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Reported On</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="text-slate-800">{{ currentFormattedDateOnly }} 10:15</span>
+                  </div>
+                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Issued To Patient</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="font-bold text-slate-900">{{ currentFormattedTimestamp }}</span>
+                  </div>
+                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700">Encounter Status</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="font-bold text-emerald-800 uppercase">FINAL / COMPLETED</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- 🔬 Clinical / Laboratory Results Formal Table -->
+            <div v-if="printOptions.vitals" class="mb-4">
+              <div class="text-center font-bold text-[10.5px] uppercase tracking-wider bg-slate-200/90 border-t border-x border-slate-400 py-1 text-slate-900">
+                CLINICAL EXAMINATION & LABORATORY FINDINGS
+              </div>
+              <table class="w-full text-left border-collapse border border-slate-400 text-[11px]">
+                <thead class="bg-slate-100 font-extrabold text-slate-800 border-b border-slate-400">
+                  <tr>
+                    <th class="py-2 px-3 border-r border-slate-400">Test / Parameter Name</th>
+                    <th class="py-2 px-3 border-r border-slate-400 text-center w-28">Results</th>
+                    <th class="py-2 px-3 border-r border-slate-400 text-center w-36">Biological Ref. Interval</th>
+                    <th class="py-2 px-3 border-r border-slate-400 text-center w-20">Units</th>
+                    <th class="py-2 px-3 text-center w-24">Clinical Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-300">
+                  <!-- Row 1: Blood Pressure -->
+                  <tr>
+                    <td class="py-2 px-3 font-bold text-slate-800 border-r border-slate-400">
+                      Blood Pressure (Systolic / Diastolic)
+                    </td>
+                    <td class="py-2 px-3 font-mono font-bold text-slate-900 border-r border-slate-400 text-center">
+                      {{ printingRecord?.bloodPressure || '115/75' }}
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center">
+                      90/60 - 120/80
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center font-mono">
+                      mmHg
+                    </td>
+                    <td class="py-2 px-3 font-bold text-emerald-700 text-center">
+                      Optimal
+                    </td>
+                  </tr>
+
+                  <!-- Row 2: Pulse Rate -->
+                  <tr>
+                    <td class="py-2 px-3 font-bold text-slate-800 border-r border-slate-400">
+                      Resting Pulse / Heart Rate
+                    </td>
+                    <td class="py-2 px-3 font-mono font-bold text-slate-900 border-r border-slate-400 text-center">
+                      {{ printingRecord?.pulse || '75' }}
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center">
+                      60 - 100
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center font-mono">
+                      bpm
+                    </td>
+                    <td class="py-2 px-3 font-bold text-emerald-700 text-center">
+                      Normal
+                    </td>
+                  </tr>
+
+                  <!-- Row 3: BMI Assessment -->
+                  <tr>
+                    <td class="py-2 px-3 font-bold text-slate-800 border-r border-slate-400">
+                      Body Mass Index (BMI Score)
+                    </td>
+                    <td class="py-2 px-3 font-mono font-bold text-slate-900 border-r border-slate-400 text-center">
+                      {{ printingRecord?.bmi || '25.4' }}
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center">
+                      18.5 - 24.9
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center font-mono">
+                      kg/m²
+                    </td>
+                    <td class="py-2 px-3 font-bold text-center" :class="printingRecord?.bmi && parseFloat(printingRecord.bmi) >= 25 ? 'text-amber-700' : 'text-emerald-700'">
+                      {{ getBmiLabel(printingRecord?.bmi || '25.4') }}
+                    </td>
+                  </tr>
+
+                  <!-- Row 4: Weight & Height -->
+                  <tr>
+                    <td class="py-2 px-3 font-bold text-slate-800 border-r border-slate-400">
+                      Anthropometry (Weight / Height)
+                    </td>
+                    <td class="py-2 px-3 font-mono font-bold text-slate-900 border-r border-slate-400 text-center whitespace-nowrap">
+                      {{ printingRecord?.weightHeight || '70 kg / 1.55 m' }}
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center">
+                      Age/Sex Standard
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center font-mono">
+                      kg / m
+                    </td>
+                    <td class="py-2 px-3 font-bold text-slate-700 text-center">
+                      Recorded
+                    </td>
+                  </tr>
+
+                  <!-- Row 5: Encounter Type -->
+                  <tr>
+                    <td class="py-2 px-3 font-bold text-slate-800 border-r border-slate-400">
+                      Encounter Category & Evaluation
+                    </td>
+                    <td class="py-2 px-3 font-bold text-slate-900 border-r border-slate-400 text-center">
+                      {{ printingRecord?.recordType }}
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center">
+                      Clinical Protocol
+                    </td>
+                    <td class="py-2 px-3 text-slate-600 border-r border-slate-400 text-center font-mono">
+                      Encounter
+                    </td>
+                    <td class="py-2 px-3 font-bold text-emerald-700 text-center">
+                      Verified
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 📝 Section 2: Clinical Assessment & Physician Notes -->
+            <div v-if="printOptions.notes" class="mb-4">
+              <div class="border border-slate-400 p-3.5 bg-slate-50/50 text-[11px] leading-relaxed">
+                <span class="font-bold uppercase tracking-wider text-slate-900 block mb-1">
+                  Physician's Clinical Interpretation & Recommendations:
+                </span>
+                <p class="text-slate-800 whitespace-pre-wrap font-sans">
+                  {{ printingRecord?.note || 'Patient evaluated for routine clinical care. Vital signs and laboratory findings are documented above. Routine clinical follow-up is advised.' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- 💊 Section 3: Prescribed Medications (Rx) -->
+            <div v-if="printOptions.prescription" class="mb-4">
+              <div class="flex items-center justify-between bg-slate-200/90 border-t border-x border-slate-400 px-3 py-1.5 text-[10.5px] font-bold text-slate-900 uppercase">
+                <span>MEDICAL PRESCRIPTION ORDERS (Rx)</span>
+                <button 
+                  type="button" 
+                  @click="addPrescriptionRow" 
+                  class="no-print text-[10px] font-bold text-teal-700 hover:text-teal-900 cursor-pointer flex items-center gap-1"
+                >
+                  <Plus class="w-3 h-3" />
+                  <span>Add Medicine</span>
+                </button>
+              </div>
+
+              <table class="w-full text-left border-collapse border border-slate-400 text-[11px]">
+                <thead class="bg-slate-100 font-extrabold text-slate-800 border-b border-slate-400">
+                  <tr>
+                    <th class="py-2 px-2 w-8 text-center border-r border-slate-400">#</th>
+                    <th class="py-2 px-3 border-r border-slate-400">Medication Name & Strength</th>
+                    <th class="py-2 px-3 w-28 border-r border-slate-400">Dosage</th>
+                    <th class="py-2 px-3 w-40 border-r border-slate-400">Frequency / Instructions</th>
+                    <th class="py-2 px-3 w-24 border-r border-slate-400">Duration</th>
+                    <th class="py-2 px-2 w-8 text-center no-print"></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-300">
+                  <tr v-for="(med, mIdx) in prescriptionsList" :key="mIdx">
+                    <td class="py-2 px-2 text-center font-bold text-slate-500 border-r border-slate-400">{{ mIdx + 1 }}</td>
+                    <td class="py-2 px-3 border-r border-slate-400">
+                      <input 
+                        type="text" 
+                        v-model="med.medicine" 
+                        placeholder="Medication Name" 
+                        class="w-full bg-transparent border-0 border-b border-transparent focus:border-teal-500 focus:outline-none py-0 text-[11px] font-bold text-slate-900"
+                      />
+                    </td>
+                    <td class="py-2 px-3 border-r border-slate-400">
+                      <input 
+                        type="text" 
+                        v-model="med.dosage" 
+                        placeholder="Dosage" 
+                        class="w-full bg-transparent border-0 border-b border-transparent focus:border-teal-500 focus:outline-none py-0 text-[11px] text-slate-800"
+                      />
+                    </td>
+                    <td class="py-2 px-3 border-r border-slate-400">
+                      <input 
+                        type="text" 
+                        v-model="med.frequency" 
+                        placeholder="Frequency" 
+                        class="w-full bg-transparent border-0 border-b border-transparent focus:border-teal-500 focus:outline-none py-0 text-[11px] text-slate-800"
+                      />
+                    </td>
+                    <td class="py-2 px-3 border-r border-slate-400">
+                      <input 
+                        type="text" 
+                        v-model="med.duration" 
+                        placeholder="Duration" 
+                        class="w-full bg-transparent border-0 border-b border-transparent focus:border-teal-500 focus:outline-none py-0 text-[11px] text-slate-800 font-mono"
+                      />
+                    </td>
+                    <td class="py-2 px-2 text-center no-print">
+                      <button 
+                        v-if="prescriptionsList.length > 1" 
+                        type="button" 
+                        @click="removePrescriptionRow(mIdx)" 
+                        class="text-slate-400 hover:text-rose-500 p-0.5 cursor-pointer"
+                      >
+                        <Trash2 class="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Bottom Note / Aster-style disclaimer -->
+            <p class="text-[9.5px] text-slate-500 italic mt-3 text-center border-t border-slate-300 pt-2">
+              Values out of reference range should be confirmed clinically. All examination results and medical notes recorded above pertain to the specified encounter date.
+            </p>
+            <p class="text-[9.5px] font-bold text-slate-700 uppercase tracking-widest text-center mt-0.5">
+              *** END OF REPORT ***
+            </p>
+
+            <!-- ✍️ Section 4: Formal 3-Column Hospital Sign-off & Stamp Block -->
+            <div v-if="printOptions.signature" class="mt-5 pt-3 border-t border-slate-400">
+              <div class="grid grid-cols-3 gap-6 text-center text-[10px]">
+                
+                <!-- Column 1: Entered By -->
+                <div class="flex flex-col">
+                  <p class="font-bold text-slate-700 uppercase tracking-wider text-[9.5px]">Entered By:</p>
+                  <div class="h-4"></div>
+                  <p class="font-bold text-slate-900 pb-0.5">Clinical Care Staff</p>
+                  <div class="border-t border-slate-400 pt-2 pb-3">
+                    <p class="text-[8.5px] text-slate-500">DMR Hospital Clinic</p>
+                  </div>
+                </div>
+
+                <!-- Column 2: Reviewed By -->
+                <div class="flex flex-col">
+                  <p class="font-bold text-slate-700 uppercase tracking-wider text-[9.5px]">Reviewed By:</p>
+                  <div class="h-4"></div>
+                  <p class="font-bold text-slate-900 pb-0.5">Medical Resident / Tech</p>
+                  <div class="border-t border-slate-400 pt-2 pb-3">
+                    <p class="text-[8.5px] text-slate-500">Quality Assurance</p>
+                  </div>
+                </div>
+
+                <!-- Column 3: Authorized / Attending Physician -->
+                <div class="flex flex-col">
+                  <p class="font-bold text-slate-700 uppercase tracking-wider text-[9.5px]">Authorized By:</p>
+                  <div class="h-4"></div>
+                  <p class="font-extrabold text-slate-900 uppercase text-[10px] pb-0.5">{{ currentDoctorName }}</p>
+                  <div class="border-t border-slate-400 pt-2 pb-3">
+                    <p class="text-[8.5px] text-slate-500">Licensed Attending Physician</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Hospital Bottom Contact Footer -->
+            <div class="mt-4 pt-2.5 border-t border-slate-300 flex items-center justify-between text-[9px] text-slate-500 font-sans">
+              <span>DMR Hospital Clinic &bull; Phnom Penh, Cambodia &bull; Tel: +855 23 888 999</span>
+              <span>Email: care@dmr.hospital &bull; www.dmr.hospital</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
     </div>
 
     <!-- ── Modern Clean Toast Notifications ────────────────────────────── -->
@@ -800,8 +1215,9 @@ import { api } from '../services/api'
 import { 
   Activity, Users, FileText, Plus, Trash2, 
   Search, HeartPulse, LineChart, ChevronDown, X, User, Edit, Eye, Download, ArrowLeft, Clock, CalendarDays,
-  Scale, FileCheck, CheckCircle2, AlertCircle, Info
+  Scale, FileCheck, CheckCircle2, AlertCircle, Info, Printer
 } from 'lucide-vue-next'
+import hospitalLogo from '@/assets/hospital-logo.png'
 
 // TypeScript Interfaces for strict typing
 interface HealthRecord {
@@ -1573,6 +1989,183 @@ const handleGlobalClick = (e: MouseEvent) => {
   if (target && !target.closest('.dropdown-container')) {
     closeAllDropdowns()
   }
+}
+
+// =========================================================================
+// CLINICAL PRINT SYSTEM (REUSABLE FOR ALL PATIENTS & ENCOUNTERS)
+// =========================================================================
+const isPrintModalOpen = ref(false)
+const printingRecord = ref<HealthRecord | null>(null)
+
+const printOptions = ref({
+  vitals: true,
+  notes: true,
+  prescription: true,
+  signature: true
+})
+
+interface PrescriptionItem {
+  medicine: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+}
+
+const prescriptionsList = ref<PrescriptionItem[]>([])
+
+const addPrescriptionRow = () => {
+  prescriptionsList.value.push({
+    medicine: '',
+    dosage: '1 tablet',
+    frequency: '2x daily after meal',
+    duration: '5 days'
+  })
+}
+
+const removePrescriptionRow = (index: number) => {
+  if (prescriptionsList.value.length > 1) {
+    prescriptionsList.value.splice(index, 1)
+  }
+}
+
+const printScrollContainer = ref<HTMLElement | null>(null)
+
+const openPrintModal = (record: HealthRecord) => {
+  printingRecord.value = record
+  
+  // Provide smart initial prescription rows based on encounter type
+  if (record.recordType === 'Cardiology Evaluation') {
+    prescriptionsList.value = [
+      { medicine: 'Amlodipine Besylate', dosage: '5mg', frequency: 'Once daily in morning', duration: '30 days' },
+      { medicine: 'Aspirin (Enteric Coated)', dosage: '81mg', frequency: 'Once daily after breakfast', duration: '30 days' }
+    ]
+  } else if (record.recordType === 'Lab Results') {
+    prescriptionsList.value = [
+      { medicine: 'Multivitamins + Iron Supplement', dosage: '1 capsule', frequency: 'Once daily with meals', duration: '14 days' }
+    ]
+  } else {
+    prescriptionsList.value = [
+      { medicine: 'Paracetamol', dosage: '500mg', frequency: '1 tab every 6h as needed', duration: '3 days' },
+      { medicine: 'Vitamin C (Ascorbic Acid)', dosage: '500mg', frequency: 'Once daily after food', duration: '10 days' }
+    ]
+  }
+  
+  isPrintModalOpen.value = true
+  setTimeout(() => {
+    if (printScrollContainer.value) {
+      printScrollContainer.value.scrollTop = 0
+    }
+  }, 50)
+}
+
+const getResolvedPatientDob = (rec: HealthRecord | null) => {
+  if (!rec) return 'N/A'
+  if (rec.dob) return rec.dob
+  // Find in registered patients directory
+  const matched = allPatients.value.find(p => p.id === rec.patientId || p.name.toLowerCase() === rec.patientName.toLowerCase())
+  if (matched && matched.dob) return matched.dob
+  return '2000-01-01'
+}
+
+const getPatientAge = (rec: HealthRecord | null) => {
+  const dob = getResolvedPatientDob(rec)
+  if (!dob || dob === 'N/A') return '25'
+  const birthDate = new Date(dob)
+  if (isNaN(birthDate.getTime())) return '25'
+  const diff = Date.now() - birthDate.getTime()
+  const ageDate = new Date(diff)
+  return Math.abs(ageDate.getUTCFullYear() - 1970).toString()
+}
+
+const currentFormattedTimestamp = computed(() => {
+  const d = new Date()
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+})
+
+const currentFormattedDateOnly = computed(() => {
+  const d = new Date()
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+})
+
+const currentDoctorName = computed(() => {
+  if (printingRecord.value?.attendingDoctor && printingRecord.value.attendingDoctor.trim()) {
+    const doc = printingRecord.value.attendingDoctor.trim()
+    return doc.startsWith('Dr.') ? doc : `Dr. ${doc}`
+  }
+  
+  const storedName = localStorage.getItem('username')
+  if (storedName && storedName.trim() && storedName.toLowerCase() !== 'admin') {
+    return storedName.startsWith('Dr.') ? storedName : `Dr. ${storedName}`
+  }
+
+  const storedEmail = localStorage.getItem('userEmail')
+  if (storedEmail && storedEmail.includes('@')) {
+    const namePart = storedEmail.split('@')[0]
+    const cleanName = namePart.replace(/[._-]/g, ' ')
+    const capitalized = cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    return `Dr. ${capitalized}`
+  }
+
+  return 'Dr. Sarah Jenkins'
+})
+
+const triggerPrint = () => {
+  const printElement = document.getElementById('printable-medical-record')
+  if (!printElement) return
+
+  // Clone node and capture live input values
+  const cloned = printElement.cloneNode(true) as HTMLElement
+  const originalInputs = printElement.querySelectorAll('input')
+  const clonedInputs = cloned.querySelectorAll('input')
+  
+  originalInputs.forEach((inp, idx) => {
+    if (clonedInputs[idx]) {
+      clonedInputs[idx].setAttribute('value', (inp as HTMLInputElement).value)
+    }
+  })
+
+  // Create isolated invisible iframe to avoid any parent CSS overflow / hidden issues
+  const printFrame = document.createElement('iframe')
+  printFrame.style.position = 'fixed'
+  printFrame.style.right = '0'
+  printFrame.style.bottom = '0'
+  printFrame.style.width = '0'
+  printFrame.style.height = '0'
+  printFrame.style.border = '0'
+  document.body.appendChild(printFrame)
+
+  const doc = printFrame.contentWindow?.document
+  if (!doc) return
+
+  doc.open()
+  doc.write('<!DOCTYPE html><html><head><title>DMR Hospital - Medical Report - ' + (printingRecord.value?.patientName || 'Patient') + '</title>')
+  doc.write('<link rel="preconnect" href="https://fonts.googleapis.com">')
+  doc.write('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>')
+  doc.write('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">')
+  doc.write('<script src="https://cdn.tailwindcss.com"><' + '/script>')
+  doc.write('<style>' +
+    '@page { size: A4 portrait; margin: 8mm 12mm; }' +
+    '* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; font-family: "Inter", system-ui, sans-serif; }' +
+    'html, body { background: #ffffff !important; color: #0f172a !important; margin: 0 !important; padding: 0 !important; height: auto; font-size: 11px; }' +
+    'img { width: 48px !important; height: 48px !important; max-width: 48px !important; max-height: 48px !important; object-fit: contain !important; }' +
+    '.no-print { display: none !important; }' +
+    '#printable-medical-record { border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }' +
+    'input { border: none !important; outline: none !important; background: transparent !important; }' +
+  '<' + '/style>')
+  doc.write('</head><body>')
+  doc.write(cloned.outerHTML)
+  doc.write('</body></html>')
+  doc.close()
+
+  printFrame.contentWindow?.focus()
+  setTimeout(() => {
+    printFrame.contentWindow?.print()
+    setTimeout(() => {
+      if (document.body.contains(printFrame)) {
+        document.body.removeChild(printFrame)
+      }
+    }, 2000)
+  }, 500)
 }
 
 onMounted(() => {

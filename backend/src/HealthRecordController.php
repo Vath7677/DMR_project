@@ -127,6 +127,13 @@ class HealthRecordController {
             $data = $_POST;
         }
 
+        // 🛡️ SECURITY (OWASP A03/XSS): Sanitize inputs (Strip HTML tags)
+        if (is_array($data)) {
+            array_walk_recursive($data, function(&$item) {
+                if (is_string($item)) $item = strip_tags($item);
+            });
+        }
+
         $record = HealthRecord::find($id);
         if (!$record) {
             echo json_encode(["status" => "error", "message" => "Record not found"]);

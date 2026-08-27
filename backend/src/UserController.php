@@ -68,6 +68,15 @@ class UserController {
         $user->role = in_array($role, ['superadmin', 'doctor', 'nurse', 'staff', 'admin']) ? $role : 'doctor';
         $user->save();
 
+        require_once __DIR__ . '/Activity.php';
+        Activity::log(
+            'user_created',
+            'Staff Account Created',
+            "New {$user->role} account created for {$user->username} ({$user->email})",
+            'Superadmin',
+            'patient'
+        );
+
         echo json_encode([
             'status' => 'success',
             'message' => 'User created successfully!',
@@ -115,6 +124,15 @@ class UserController {
 
         $user->save();
 
+        require_once __DIR__ . '/Activity.php';
+        Activity::log(
+            'user_updated',
+            'Staff Account Updated',
+            "Updated {$user->role} profile for {$user->username}",
+            'Superadmin',
+            'patient'
+        );
+
         echo json_encode([
             'status' => 'success',
             'message' => 'User updated successfully!',
@@ -151,7 +169,18 @@ class UserController {
             return;
         }
 
+        $uName = $user->username;
+        $uRole = $user->role;
         $user->delete();
+
+        require_once __DIR__ . '/Activity.php';
+        Activity::log(
+            'user_deleted',
+            'Staff Account Deleted',
+            "Removed {$uRole} account {$uName}",
+            'Superadmin',
+            'delete'
+        );
 
         echo json_encode([
             'status' => 'success',
