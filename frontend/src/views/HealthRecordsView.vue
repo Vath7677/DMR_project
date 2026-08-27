@@ -743,7 +743,6 @@
 
     <!-- ========================================================================= -->
     <!-- CLINICAL RECORD & PRESCRIPTION PRINT PREVIEW MODAL -->
-    <!-- ========================================================================= -->
     <div v-if="isPrintModalOpen" class="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       <!-- Backdrop -->
       <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs no-print transition-opacity" @click="isPrintModalOpen = false"></div>
@@ -815,7 +814,7 @@
             id="printable-medical-record" 
             class="w-full max-w-[780px] bg-white shadow-2xl rounded-sm border border-slate-200 p-8 text-slate-900 font-sans text-xs my-2 ring-8 ring-black/20 print:shadow-none print:border-none print:rounded-none print:p-0 print:m-0 print:w-full print:max-w-none print:ring-0"
           >
-            <!-- 🏥 Official Hospital Letterhead Top Header -->
+            <!-- Official Hospital Letterhead Top Header -->
             <div class="flex items-center justify-between pb-3 border-b-2 border-slate-900 gap-4 mb-3.5">
               <div class="flex items-center gap-3">
                 <img :src="hospitalLogo" alt="DMR Hospital" class="w-12 h-12 object-contain shrink-0" style="width: 48px; height: 48px; max-width: 48px; max-height: 48px;" />
@@ -829,7 +828,7 @@
               </div>
             </div>
 
-            <!-- 👤 Formal Patient Demographics Box (Clean Fixed-Grid Alignment) -->
+            <!-- Formal Patient Demographics Box (Clean Fixed-Grid Alignment) -->
             <div class="border border-slate-400 mb-4.5 text-[11px] leading-relaxed bg-slate-50/40">
               <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-400">
                 
@@ -858,7 +857,7 @@
                   <div class="grid grid-cols-[90px_12px_1fr] items-center">
                     <span class="font-bold text-slate-700">Referring Org</span>
                     <span class="text-slate-500 font-bold">:</span>
-                    <span class="text-slate-700">DMR MEDICAL CENTRE PHNOM PENH</span>
+                    <span class="text-slate-700">DMR MEDICAL CENTRE</span>
                   </div>
                 </div>
 
@@ -894,7 +893,7 @@
               </div>
             </div>
 
-            <!-- 🔬 Clinical / Laboratory Results Formal Table -->
+            <!-- Clinical / Laboratory Results Formal Table -->
             <div v-if="printOptions.vitals" class="mb-4">
               <div class="text-center font-bold text-[10.5px] uppercase tracking-wider bg-slate-200/90 border-t border-x border-slate-400 py-1 text-slate-900">
                 CLINICAL EXAMINATION & LABORATORY FINDINGS
@@ -1020,7 +1019,7 @@
               </div>
             </div>
 
-            <!-- 💊 Section 3: Prescribed Medications (Rx) -->
+            <!-- Section 3: Prescribed Medications (Rx) -->
             <div v-if="printOptions.prescription" class="mb-4">
               <div class="flex items-center justify-between bg-slate-200/90 border-t border-x border-slate-400 px-3 py-1.5 text-[10.5px] font-bold text-slate-900 uppercase">
                 <span>MEDICAL PRESCRIPTION ORDERS (Rx)</span>
@@ -1100,7 +1099,7 @@
               Values out of reference range should be confirmed clinically. All examination results and medical notes recorded above pertain to the specified encounter date.
             </p>
             <p class="text-[9.5px] font-bold text-slate-700 uppercase tracking-widest text-center mt-0.5">
-              *** END OF REPORT ***
+               END OF REPORT 
             </p>
 
             <!-- ✍️ Section 4: Formal 3-Column Hospital Sign-off & Stamp Block -->
@@ -1112,7 +1111,7 @@
                   <p class="font-bold text-slate-700 uppercase tracking-wider text-[9.5px]">Entered By:</p>
                   <div class="h-4"></div>
                   <p class="font-bold text-slate-900 pb-0.5">Clinical Care Staff</p>
-                  <div class="border-t border-slate-400 pt-2 pb-3">
+                  <div class="border-t border-slate-400 pt-2 pb-6">
                     <p class="text-[8.5px] text-slate-500">DMR Hospital Clinic</p>
                   </div>
                 </div>
@@ -1122,7 +1121,7 @@
                   <p class="font-bold text-slate-700 uppercase tracking-wider text-[9.5px]">Reviewed By:</p>
                   <div class="h-4"></div>
                   <p class="font-bold text-slate-900 pb-0.5">Medical Resident / Tech</p>
-                  <div class="border-t border-slate-400 pt-2 pb-3">
+                  <div class="border-t border-slate-400 pt-2 pb-6">
                     <p class="text-[8.5px] text-slate-500">Quality Assurance</p>
                   </div>
                 </div>
@@ -1131,9 +1130,9 @@
                 <div class="flex flex-col">
                   <p class="font-bold text-slate-700 uppercase tracking-wider text-[9.5px]">Authorized By:</p>
                   <div class="h-4"></div>
-                  <p class="font-extrabold text-slate-900 uppercase text-[10px] pb-0.5">{{ currentDoctorName }}</p>
-                  <div class="border-t border-slate-400 pt-2 pb-3">
-                    <p class="text-[8.5px] text-slate-500">Licensed Attending Physician</p>
+                  <p class="font-bold text-slate-900 text-[10.5px] pb-0.5">{{ currentDoctorName }}</p>
+                  <div class="border-t border-slate-400 pt-2 pb-6">
+                    <p class="text-[8.5px] text-slate-500">Attending Physician</p>
                   </div>
                 </div>
 
