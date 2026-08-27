@@ -43,8 +43,8 @@
         <p class="text-2xl font-extrabold text-teal-700 mt-1 font-heading">{{ countRole('doctor') }}</p>
       </div>
       <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-        <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider font-sans">Staff</p>
-        <p class="text-2xl font-extrabold text-amber-700 mt-1 font-heading">{{ countRole('staff') }}</p>
+        <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider font-sans">Nurse</p>
+        <p class="text-2xl font-extrabold text-amber-700 mt-1 font-heading">{{ countRole('nurse') }}</p>
       </div>
       <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
         <p class="text-xs font-semibold text-purple-600 uppercase tracking-wider font-sans">Superadmins</p>

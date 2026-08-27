@@ -1132,7 +1132,6 @@
                   <div class="h-4"></div>
                   <p class="font-bold text-slate-900 text-[10.5px] pb-0.5">{{ currentDoctorName }}</p>
                   <div class="border-t border-slate-400 pt-2 pb-6">
-                    <p class="text-[8.5px] text-slate-500">Attending Physician</p>
                   </div>
                 </div>
 
