@@ -1,4 +1,4 @@
-# DMR Hospital Portal (Hospital Management System)
+# DMR (Hospital Management System)
 
 A comprehensive, secure, and modern healthcare management dashboard designed to streamline clinic and hospital operations. Built with a Vue.js 3 frontend and a robust PHP backend.
 
