@@ -1,8 +1,10 @@
 // frontend/src/services/api.ts
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dmr-project-mwmp.onrender.com';
+// export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dmr-project-mwmp.onrender.com';
 
 // export const API_BASE_URL = 'http://localhost/DMR_project/backend/public';
+
+export const API_BASE_URL = 'https://dmr-project-mwmp.onrender.com';
 
 export const resolveServerUrl = (path: string) => {
   if (!path) return '';
