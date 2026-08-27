@@ -1211,7 +1211,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { api } from '../services/api'
+import { api, resolveServerUrl } from '../services/api'
 import { 
   Activity, Users, FileText, Plus, Trash2, 
   Search, HeartPulse, LineChart, ChevronDown, X, User, Edit, Eye, Download, ArrowLeft, Clock, CalendarDays,
@@ -1725,7 +1725,7 @@ const getBmiClass = (bmiStr: string) => {
 }
 
 const getFileUrl = (url: string) => {
-  return (import.meta.env.VITE_API_BASE_URL || "http://localhost") + url;
+  return resolveServerUrl(url)
 }
 
 const getAttachments = (attachmentUrl?: string) => {

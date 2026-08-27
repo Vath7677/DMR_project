@@ -488,7 +488,7 @@
         <div class="flex items-start justify-between pb-5 border-b border-slate-100">
           <div class="flex items-center gap-3.5">
             <img 
-              :src="selectedUserDetails?.avatar ? (selectedUserDetails.avatar.startsWith('http') ? selectedUserDetails.avatar : `http://localhost/DMR_project/backend/public/${selectedUserDetails.avatar}`) : defaultAvatar" 
+              :src="selectedUserDetails?.avatar ? resolveServerUrl(selectedUserDetails.avatar) : defaultAvatar" 
               alt="Avatar" 
               class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-xs ring-2 ring-slate-100"
               @error="(e: Event) => (e.target as HTMLImageElement).src = defaultAvatar"
@@ -600,7 +600,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { api } from '../services/api'
+import { api, resolveServerUrl } from '../services/api'
 import defaultAvatar from '@/assets/profiledefault.svg'
 import { 
   Users, 
@@ -702,9 +702,7 @@ const displayToast = (msg: string) => {
 
 const getAvatarUrl = (path?: string | null) => {
   if (!path) return defaultAvatar
-  if (path.startsWith('http') || path.startsWith('data:')) return path
-  const clean = path.startsWith('/') ? path.slice(1) : path
-  return `http://localhost/DMR_project/backend/public/${clean}`
+  return resolveServerUrl(path)
 }
 
 const onImgErr = (e: Event) => {

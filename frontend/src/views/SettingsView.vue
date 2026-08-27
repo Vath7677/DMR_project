@@ -344,7 +344,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { api } from '../services/api'
+import { api, resolveServerUrl } from '../services/api'
 import defaultAvatar from '@/assets/profiledefault.svg'
 import { 
   Save, 
@@ -415,10 +415,7 @@ const displayAvatar = computed(() => {
   if (!avatarPath.value) {
     return defaultAvatar
   }
-  if (avatarPath.value.startsWith('http') || avatarPath.value.startsWith('data:')) {
-    return avatarPath.value
-  }
-  return `http://localhost/DMR_project/backend/public/${avatarPath.value}`
+  return resolveServerUrl(avatarPath.value)
 })
 
 const hasCustomAvatar = computed(() => {

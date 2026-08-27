@@ -1,7 +1,17 @@
 // frontend/src/services/api.ts
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/DMR_project/backend/public';
-// const API_BASE_URL = 'https://dmr-project-mwmp.onrender.com';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dmr-project-mwmp.onrender.com';
+
+// export const API_BASE_URL = 'http://localhost/DMR_project/backend/public';
+
+export const resolveServerUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
+    return path;
+  }
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `${API_BASE_URL}/${cleanPath}`;
+};
 
 async function handleResponse(response: Response) {
   const data = await response.json().catch(() => ({

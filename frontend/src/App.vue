@@ -110,7 +110,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { api } from './services/api'
+import { api, resolveServerUrl } from './services/api'
 import defaultAvatar from '@/assets/profiledefault.svg'
 import { 
   LineChart, 
@@ -136,25 +136,10 @@ const userRole = ref<string>('superadmin')
 const userAvatar = ref<string>('')
 const isProfileOpen = ref(false)
 
-const resolveServerUrl = (path: string) => {
-  if (!path) return ''
-  if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
-    return path
-  }
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path
-  return `http://localhost/DMR_project/backend/public/${cleanPath}`
-}
-
 const handleImageFallback = (e: Event) => {
   const img = e.target as HTMLImageElement
-  if (img && img.src) {
-    if (img.src.includes('/DMR_project/backend/public/uploads/')) {
-      img.src = img.src.replace('/DMR_project/backend/public/uploads/', '/uploads/')
-    } else if (img.src.includes(':5184/uploads/')) {
-      img.src = `http://localhost/uploads/${img.src.split('/uploads/')[1]}`
-    } else {
-      img.src = defaultAvatar
-    }
+  if (img) {
+    img.src = defaultAvatar
   }
 }
 
