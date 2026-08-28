@@ -1,10 +1,10 @@
-# 🏥 DMR Hospital Management System (Digital Medical Records)
+# DMR Hospital Management System (Digital Medical Records)
 
 A modern, high-performance, and secure healthcare management web application designed for hospitals and clinics to manage patient demographics, clinical health records, consultations, financial analytics, and user access control.
 
 ---
 
-## 🏗️ Architecture & Technology Stack
+## Architecture & Technology Stack
 
 | Layer | Technologies Used | Details |
 |---|---|---|
@@ -14,7 +14,7 @@ A modern, high-performance, and secure healthcare management web application des
 
 ---
 
-## 🗄️ Database Schemas
+## Database Schemas
 
 The database consists of 6 primary tables:
 
@@ -36,7 +36,7 @@ The database consists of 6 primary tables:
 
 ---
 
-## ⚡ API Endpoints Summary
+## API Endpoints Summary
 
 ### 1. Authentication (`/api/auth`)
 - `POST /api/auth/login` - Authenticate user credentials with brute-force rate-limiting.
@@ -75,7 +75,7 @@ The database consists of 6 primary tables:
 
 ---
 
-## 🐛 Comprehensive Code Audit & Bug Fixes Report
+## Comprehensive Code Audit & Bug Fixes Report
 
 During the full codebase audit, several issues and performance bottlenecks were identified and resolved:
 
@@ -92,7 +92,7 @@ During the full codebase audit, several issues and performance bottlenecks were 
 
 ---
 
-## 🚀 Local Development Setup
+## Local Development Setup
 
 ### 1. Backend Setup
 1. Place the project inside `/Applications/XAMPP/xamppfiles/htdocs/DMR_project/` (or your Apache web directory).
