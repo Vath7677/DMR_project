@@ -81,7 +81,7 @@ class HealthRecordController {
         // Auto-generate record_id (e.g. HR-1001)
         $lastRecord = HealthRecord::orderBy('id', 'desc')->first();
         $nextId = 1001;
-        if ($lastRecord && preg_match('/HR-(\d+)/', $lastRecord->record_id, $matches)) {
+        if ($lastRecord && preg_match('/(?:HR|REC)-(\d+)/i', $lastRecord->record_id, $matches)) {
             $nextId = intval($matches[1]) + 1;
         }
 
@@ -100,12 +100,31 @@ class HealthRecordController {
         $record->bmi = $data['bmi'] ?? '';
         $record->attending_doctor = $data['attending_doctor'] ?? '';
         $record->note = $data['note'] ?? null;
+        $record->fee = isset($data['fee']) && is_numeric($data['fee']) ? floatval($data['fee']) : 35.00;
+        $record->payment_status = $data['payment_status'] ?? 'Paid';
         
         if (!empty($attachmentUrls)) {
             $record->attachment_url = json_encode($attachmentUrls);
         }
         
         $record->save();
+
+        // 💵 Automatically record in payments table
+        try {
+            \Illuminate\Database\Capsule\Manager::table('payments')->insert([
+                'payment_id' => 'PAY-' . str_replace('HR-', '', $record->record_id),
+                'record_id' => $record->record_id,
+                'patient_id' => $record->patient_id,
+                'patient_name' => $record->patient_name,
+                'amount' => $record->fee ?: 35.00,
+                'payment_status' => $record->payment_status ?: 'Paid',
+                'paid_at' => date('Y-m-d H:i:s'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+        } catch (\Exception $e) {
+            // Ignore if already logged
+        }
 
         require_once __DIR__ . '/Activity.php';
         Activity::log(
@@ -213,8 +232,27 @@ class HealthRecordController {
         if (isset($data['bmi'])) $record->bmi = $data['bmi'];
         if (isset($data['attending_doctor'])) $record->attending_doctor = $data['attending_doctor'];
         if (isset($data['note'])) $record->note = $data['note'];
+        if (isset($data['fee'])) $record->fee = is_numeric($data['fee']) ? floatval($data['fee']) : $record->fee;
+        if (isset($data['payment_status'])) $record->payment_status = $data['payment_status'];
         
         $record->save();
+
+        // 💵 Sync updated fee/status to payments table
+        try {
+            \Illuminate\Database\Capsule\Manager::table('payments')->updateOrInsert(
+                ['record_id' => $record->record_id],
+                [
+                    'payment_id' => 'PAY-' . str_replace('HR-', '', $record->record_id),
+                    'patient_id' => $record->patient_id,
+                    'patient_name' => $record->patient_name,
+                    'amount' => $record->fee ?: 35.00,
+                    'payment_status' => $record->payment_status ?: 'Paid',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]
+            );
+        } catch (\Exception $e) {
+            // Ignore
+        }
 
         require_once __DIR__ . '/Activity.php';
         Activity::log(
@@ -246,7 +284,16 @@ class HealthRecordController {
             $pName = $record->patient_name;
             $rType = $record->record_type;
             $doc = $record->attending_doctor;
+            $recId = $record->record_id;
+            
             $record->delete();
+
+            // 💵 Delete associated payment transaction
+            try {
+                \Illuminate\Database\Capsule\Manager::table('payments')->where('record_id', $recId)->delete();
+            } catch (\Exception $e) {
+                // Ignore
+            }
 
             require_once __DIR__ . '/Activity.php';
             Activity::log(

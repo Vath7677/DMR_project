@@ -134,6 +134,11 @@
                     <span :class="['px-3 py-0.5 rounded-full text-xs font-bold border', getBadgeClass(record.recordType)]">
                       {{ record.recordType }}
                     </span>
+                    <!-- 💵 Consultation Fee Badge -->
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                      <span>${{ Math.round(Number(record.fee || 35)) }}</span>
+                      <span class="text-[10px] font-semibold text-emerald-600">({{ record.payment_status || 'Paid' }})</span>
+                    </span>
                     <span v-if="getRecordOriginalIndex(record.id) === 0" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider">
                       Latest Visit
                     </span>
@@ -653,6 +658,7 @@
                     <label class="text-[13px] font-medium text-slate-700">Attending Doctor</label>
                     <input list="doctor-options" ref="doctorInput" type="text" v-model="newRecord.attendingDoctor"  @keydown.enter.prevent="recordForm?.requestSubmit()" placeholder="Dr. Name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="doctor-options">
+                      <option :value="getLoggedInDoctorDefault()"></option>
                       <option value="Dr. Sarah Jenkins"></option>
                       <option value="Dr. James Wilson"></option>
                       <option value="Dr. Amara Okonkwo"></option>
@@ -661,6 +667,111 @@
                       <option value="Dr. David Smith"></option>
                       <option value="Dr. Sophia Patel"></option>
                     </datalist>
+                  </div>
+                </div>
+
+                <!-- 💵 Consultation Fee & Billing Section -->
+                <div class="p-4 bg-teal-50/50 rounded-xl border border-teal-100 space-y-3 mt-4">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[13px] font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>Consultation Fee & Billing ($)</span>
+                    </label>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1 relative" ref="feeDropdownRef">
+                      <label class="text-[12px] font-semibold text-slate-600">Amount (USD)</label>
+                      <div class="relative flex items-center">
+                        <span class="absolute left-3 text-slate-400 font-bold text-sm pointer-events-none">$</span>
+                        <input 
+                          type="number" 
+                          step="1" 
+                          min="0"
+                          v-model="newRecord.fee" 
+                          placeholder="35" 
+                          @focus="isFeeMenuOpen = true; ($event.target as HTMLInputElement).select()"
+                          @click="isFeeMenuOpen = true"
+                          class="w-full pl-7 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-[13px] font-bold text-slate-800 focus:outline-none focus:border-teal-500 transition-colors" 
+                        />
+                        <button 
+                          type="button" 
+                          @click.stop="isFeeMenuOpen = !isFeeMenuOpen"
+                          class="absolute right-2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                        >
+                          <ChevronDown class="w-3.5 h-3.5 transition-transform duration-200" :class="{'rotate-180': isFeeMenuOpen}" />
+                        </button>
+                      </div>
+
+                      <!-- 🌟 Custom Suggestions Floating Popover (Opens Immediately on Click!) -->
+                      <Transition name="fade">
+                        <div 
+                          v-if="isFeeMenuOpen" 
+                          class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden py-1 max-h-48 overflow-y-auto"
+                        >
+                          <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                            Suggested Fees
+                          </div>
+                          <button
+                            v-for="amt in [10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 100]"
+                            :key="amt"
+                            type="button"
+                            @click="newRecord.fee = amt; isFeeMenuOpen = false"
+                            class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-teal-50 hover:text-teal-700 flex items-center justify-between transition-colors cursor-pointer"
+                            :class="{'bg-teal-50/80 text-teal-700 font-bold': Number(newRecord.fee) === amt}"
+                          >
+                            <span>${{ amt }} USD</span>
+                            <span v-if="Number(newRecord.fee) === amt" class="text-[10px] bg-teal-600 text-white px-1.5 py-0.5 rounded font-bold">Selected</span>
+                          </button>
+                        </div>
+                      </Transition>
+                    </div>
+
+                    <div class="space-y-1">
+                      <label class="text-[12px] font-semibold text-slate-600">Payment Status</label>
+                      <div class="grid grid-cols-3 gap-1.5 h-[38px]">
+                        <button
+                          type="button"
+                          @click="newRecord.payment_status = 'Paid'"
+                          :class="[
+                            'h-full rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border',
+                            newRecord.payment_status === 'Paid' 
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs' 
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                          ]"
+                        >
+                          <span class="w-1.5 h-1.5 rounded-full" :class="newRecord.payment_status === 'Paid' ? 'bg-white' : 'bg-emerald-500'"></span>
+                          <span>Paid</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          @click="newRecord.payment_status = 'Pending'"
+                          :class="[
+                            'h-full rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border',
+                            newRecord.payment_status === 'Pending' 
+                              ? 'bg-amber-500 text-white border-amber-500 shadow-2xs' 
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                          ]"
+                        >
+                          <span class="w-1.5 h-1.5 rounded-full" :class="newRecord.payment_status === 'Pending' ? 'bg-white' : 'bg-amber-500'"></span>
+                          <span>Pending</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          @click="newRecord.payment_status = 'Waived'"
+                          :class="[
+                            'h-full rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border',
+                            newRecord.payment_status === 'Waived' 
+                              ? 'bg-slate-700 text-white border-slate-700 shadow-2xs' 
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                          ]"
+                        >
+                          <span class="w-1.5 h-1.5 rounded-full" :class="newRecord.payment_status === 'Waived' ? 'bg-white' : 'bg-slate-400'"></span>
+                          <span>Waived</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -823,9 +934,6 @@
                   <p class="text-[9.5px] font-bold text-teal-700 tracking-widest uppercase mt-0.5">We'll Treat You Well &bull; Digital Medical Records</p>
                 </div>
               </div>
-              <div class="text-right">
-                <p class="text-[11px] font-sans text-slate-800 font-bold">REF ID: {{ printingRecord?.id }}</p>
-              </div>
             </div>
 
             <!-- Formal Patient Demographics Box (Clean Fixed-Grid Alignment) -->
@@ -834,28 +942,28 @@
                 
                 <!-- Left Details (Aligned Grid) -->
                 <div class="p-3.5 space-y-2">
-                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Name</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Name</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="font-black text-slate-900">{{ printingRecord?.patientName }}</span>
                   </div>
-                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Age / Gender</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Age / Gender</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="text-slate-800 font-medium">{{ getPatientAge(printingRecord) }} Years / {{ printingRecord?.gender }}</span>
                   </div>
-                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">MRN / PID</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">MRN / PID</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="font-sans font-bold text-slate-900">{{ printingRecord?.patientId }}</span>
                   </div>
-                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Referred By</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Referred By</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="text-slate-800">{{ currentDoctorName }}</span>
                   </div>
-                  <div class="grid grid-cols-[90px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Referring Org</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Referring Org</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="text-slate-700">DMR MEDICAL CENTRE</span>
                   </div>
@@ -863,30 +971,30 @@
 
                 <!-- Right Details (Aligned Grid) -->
                 <div class="p-3.5 space-y-2">
-                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Encounter Date</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Encounter Date</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="text-slate-800 font-medium">{{ formatDisplayDate(printingRecord?.date || '') }}</span>
                   </div>
-                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Examined On</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Examined On</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="text-slate-800">{{ formatDisplayDate(printingRecord?.date || '') }} 09:30</span>
                   </div>
-                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Reported On</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Reported On</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="text-slate-800">{{ currentFormattedDateOnly }} 10:15</span>
                   </div>
-                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Issued To Patient</span>
-                    <span class="text-slate-500 font-bold">:</span>
-                    <span class="font-bold text-slate-900">{{ currentFormattedTimestamp }}</span>
-                  </div>
-                  <div class="grid grid-cols-[105px_12px_1fr] items-center">
-                    <span class="font-bold text-slate-700">Encounter Status</span>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Encounter Status</span>
                     <span class="text-slate-500 font-bold">:</span>
                     <span class="font-bold text-emerald-800 uppercase">FINAL / COMPLETED</span>
+                  </div>
+                  <div class="grid grid-cols-[115px_12px_1fr] items-center">
+                    <span class="font-bold text-slate-700 whitespace-nowrap">Consultation Fee</span>
+                    <span class="text-slate-500 font-bold">:</span>
+                    <span class="font-bold text-slate-900 font-mono">${{ Math.round(Number(printingRecord?.fee || 35)) }} USD ({{ printingRecord?.payment_status || 'Paid' }})</span>
                   </div>
                 </div>
 
@@ -1236,6 +1344,8 @@ interface HealthRecord {
   attendingDoctor: string;
   note?: string;
   dob?: string;
+  fee?: number | string;
+  payment_status?: string;
   attachment_url?: string;
 }
 
@@ -1255,6 +1365,8 @@ const isSortOpen = ref(false)
 const currentSort = ref('Newest First')
 const isPageSizeOpen = ref(false)
 const searchQuery = ref('')
+const isFeeMenuOpen = ref(false)
+const feeDropdownRef = ref<HTMLElement | null>(null)
 
 // ── Toast Notification System ──────────────────────────────────────────────
 interface Toast { id: number; type: 'success' | 'error' | 'info'; message: string }
@@ -1291,6 +1403,26 @@ const isAddModalOpen = ref(false)
 const isImagePreviewOpen = ref(false)
 const previewImageUrl = ref('')
 const editingRecordId = ref<string | null>(null)
+
+// Doctor name helper extracted from logged-in username or email
+const getLoggedInDoctorDefault = () => {
+  const storedName = localStorage.getItem('username')
+  if (storedName && storedName.trim()) {
+    const clean = storedName.trim()
+    const formatted = clean.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    return formatted.startsWith('Dr.') ? formatted : `Dr. ${formatted}`
+  }
+
+  const storedEmail = localStorage.getItem('userEmail')
+  if (storedEmail && storedEmail.includes('@')) {
+    const namePart = storedEmail.split('@')[0] || ''
+    const cleanName = namePart.replace(/[._-]/g, ' ')
+    const capitalized = cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    return capitalized.startsWith('Dr.') ? capitalized : `Dr. ${capitalized}`
+  }
+
+  return 'Dr. Sarah Jenkins'
+}
 
 // Navigate into Dedicated Patient Dossier View
 const viewPatientDossier = (patientId: string) => {
@@ -1409,10 +1541,12 @@ const openNewVisitForCurrentPatient = () => {
     pulse: '',
     weightHeight: '',
     bmi: '',
-    attendingDoctor: patient.attendingDoctor || 'Dr. Sarah Jenkins',
+    attendingDoctor: getLoggedInDoctorDefault(),
     note: '',
     weight: '',
-    height: ''
+    height: '',
+    fee: 35,
+    payment_status: 'Paid'
   }
   isAddModalOpen.value = true
 }
@@ -1778,10 +1912,12 @@ const openAddModal = () => {
     pulse: '',
     weightHeight: '',
     bmi: '',
-    attendingDoctor: 'Dr. Sarah Jenkins',
+    attendingDoctor: getLoggedInDoctorDefault(),
     note: '',
     weight: '',
-    height: ''
+    height: '',
+    fee: 35,
+    payment_status: 'Paid'
   }
   isAddModalOpen.value = true
 }
@@ -1816,7 +1952,9 @@ const openEditModal = (record: HealthRecord) => {
   newRecord.value = { 
     ...record, 
     weight: record.weight !== undefined ? record.weight : w, 
-    height: record.height !== undefined ? record.height : h 
+    height: record.height !== undefined ? record.height : h,
+    fee: record.fee !== undefined ? record.fee : 35,
+    payment_status: record.payment_status || 'Paid'
   }
   isAddModalOpen.value = true
 }
@@ -1843,6 +1981,8 @@ const fetchRecords = async () => {
         attendingDoctor: r.attending_doctor || '',
         dob: r.dob || '',
         note: r.note || '',
+        fee: r.fee !== undefined && !isNaN(Number(r.fee)) ? Math.round(Number(r.fee)) : 35,
+        payment_status: r.payment_status || 'Paid',
         attachment_url: r.attachment_url || ''
       }))
     }
@@ -1928,6 +2068,8 @@ const saveRecord = async () => {
   payload.append('bmi', newRecord.value.bmi)
   payload.append('attending_doctor', newRecord.value.attendingDoctor)
   payload.append('note', newRecord.value.note || '')
+  payload.append('fee', Math.round(Number(newRecord.value.fee || 35)).toString())
+  payload.append('payment_status', newRecord.value.payment_status || 'Paid')
   
   if (editingRecordId.value) {
     payload.append('existing_attachments', JSON.stringify(existingAttachments.value))
@@ -1979,6 +2121,7 @@ const closeAllDropdowns = () => {
   isRangeOpen.value = false
   isSortOpen.value = false
   isPageSizeOpen.value = false
+  isFeeMenuOpen.value = false
 }
 
 // Global click outside listener
@@ -1986,6 +2129,9 @@ const handleGlobalClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement | null
   if (target && !target.closest('.dropdown-container')) {
     closeAllDropdowns()
+  }
+  if (target && feeDropdownRef.value && !feeDropdownRef.value.contains(target)) {
+    isFeeMenuOpen.value = false
   }
 }
 
@@ -1997,8 +2143,8 @@ const printingRecord = ref<HealthRecord | null>(null)
 
 const printOptions = ref({
   vitals: true,
-  notes: true,
-  prescription: true,
+  notes: false,
+  prescription: false,
   signature: true
 })
 
@@ -2012,12 +2158,7 @@ interface PrescriptionItem {
 const prescriptionsList = ref<PrescriptionItem[]>([])
 
 const addPrescriptionRow = () => {
-  prescriptionsList.value.push({
-    medicine: '',
-    dosage: '1 tablet',
-    frequency: '2x daily after meal',
-    duration: '5 days'
-  })
+  prescriptionsList.value.push({ medicine: '', dosage: '', frequency: '', duration: '' })
 }
 
 const removePrescriptionRow = (index: number) => {
@@ -2030,6 +2171,12 @@ const printScrollContainer = ref<HTMLElement | null>(null)
 
 const openPrintModal = (record: HealthRecord) => {
   printingRecord.value = record
+  printOptions.value = {
+    vitals: true,
+    notes: false,
+    prescription: false,
+    signature: true
+  }
   
   // Provide smart initial prescription rows based on encounter type
   if (record.recordType === 'Cardiology Evaluation') {
@@ -2090,21 +2237,7 @@ const currentDoctorName = computed(() => {
     const doc = printingRecord.value.attendingDoctor.trim()
     return doc.startsWith('Dr.') ? doc : `Dr. ${doc}`
   }
-  
-  const storedName = localStorage.getItem('username')
-  if (storedName && storedName.trim() && storedName.toLowerCase() !== 'admin') {
-    return storedName.startsWith('Dr.') ? storedName : `Dr. ${storedName}`
-  }
-
-  const storedEmail = localStorage.getItem('userEmail')
-  if (storedEmail && storedEmail.includes('@')) {
-    const namePart = storedEmail.split('@')[0]
-    const cleanName = namePart.replace(/[._-]/g, ' ')
-    const capitalized = cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-    return `Dr. ${capitalized}`
-  }
-
-  return 'Dr. Sarah Jenkins'
+  return getLoggedInDoctorDefault()
 })
 
 const triggerPrint = () => {

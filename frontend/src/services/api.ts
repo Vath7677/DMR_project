@@ -26,8 +26,10 @@ async function handleResponse(response: Response) {
 }
 
 function getHeaders(isFormData = false) {
+  const email = localStorage.getItem('userEmail') || 'admin@gmail.com';
   const headers: Record<string, string> = {
-    'X-User-Email': localStorage.getItem('userEmail') || 'admin@gmail.com',
+    'X-User-Email': email,
+    'Authorization': `Bearer ${email}`,
   };
   if (!isFormData) {
     headers['Content-Type'] = 'application/json';

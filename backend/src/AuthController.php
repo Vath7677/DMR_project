@@ -6,16 +6,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 class AuthController {
 
     public function __construct() {
-        // Auto-ensure avatar column exists in users table
-        try {
-            if (!Capsule::schema()->hasColumn('users', 'avatar')) {
-                Capsule::schema()->table('users', function ($table) {
-                    $table->string('avatar', 255)->nullable()->after('role');
-                });
-            }
-        } catch (\Exception $e) {
-            // Ignore if already exists or permission
-        }
+        // Ready
     }
 
     // Login

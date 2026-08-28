@@ -9,7 +9,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 $capsule = new Capsule;
 
-$connectionConfig = [
+/* $connectionConfig = [
     'driver'    => 'mysql',
     'host'      => getenv('DB_HOST') ?: 'db',
     'port'      => getenv('DB_PORT') ?: 3306,
@@ -26,9 +26,9 @@ if (getenv('DB_HOST') && getenv('DB_HOST') !== 'db' && getenv('DB_HOST') !== 'lo
         PDO::MYSQL_ATTR_SSL_CA => true,
         PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
     ];
-} 
+} */
 
-/* $connectionConfig = [
+$connectionConfig = [
     'driver'    => 'mysql',
     'host'      => getenv('DB_HOST') ?: 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com',
     'port'      => (int)(getenv('DB_PORT') ?: 4000),
@@ -44,17 +44,10 @@ if (getenv('DB_HOST') && getenv('DB_HOST') !== 'db' && getenv('DB_HOST') !== 'lo
         PDO::ATTR_PERSISTENT => true,
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ],
-]; */
+];
 
 $capsule->addConnection($connectionConfig);
 
 $capsule->setEventDispatcher(new Dispatcher(new Container));
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
-
-// Guarantee avatar column exists in users table
-try {
-    Capsule::statement("ALTER TABLE `users` ADD `avatar` VARCHAR(255) NULL AFTER `role`;");
-} catch (\Exception $e) {
-    // Already exists
-}

@@ -235,6 +235,24 @@ const getActivityDetails = (act: any) => {
 const fetchDashboardStats = async () => {
   isLoadingActivities.value = true
   try {
+    // ⚡ 1. Try unified high-speed dashboard endpoint (1 single roundtrip)
+    const unifiedRes = await api.get('/api/dashboard/stats').catch(() => null)
+    if (unifiedRes && unifiedRes.status === 'success' && unifiedRes.data) {
+      const d = unifiedRes.data
+      totalPatients.value = d.totalPatients || 0
+      activePatients.value = d.activePatients || 0
+      newPatients.value = d.newPatients || 0
+      totalRecords.value = d.totalRecords || 0
+      if (Array.isArray(d.healthRecordsList)) {
+        healthRecordsList.value = d.healthRecordsList
+      }
+      if (Array.isArray(d.activities)) {
+        recentActivities.value = d.activities
+      }
+      return
+    }
+
+    // 2. Fallback to individual requests if unified endpoint is unavailable
     const [patientsRes, recordsRes, activitiesRes] = await Promise.all([
       api.get('/api/patients').catch(() => null),
       api.get('/api/health-records').catch(() => null),

@@ -23,12 +23,12 @@ class PatientController {
 
         $lastPatient = Patient::orderBy('id', 'desc')->first();
         $nextId = 1001;
-        if ($lastPatient && preg_match('/P-(\d+)/', $lastPatient->patient_id, $matches)) {
+        if ($lastPatient && preg_match('/(?:PID|P)-(\d+)/i', $lastPatient->patient_id, $matches)) {
             $nextId = intval($matches[1]) + 1;
         }
 
         $patient = new Patient();
-        $patient->patient_id = 'P-' . $nextId;
+        $patient->patient_id = 'PID-' . $nextId;
         $patient->first_name = $data['first_name'] ?? '';
         $patient->last_name = $data['last_name'] ?? '';
         $patient->gender = $data['gender'] ?? 'Other';

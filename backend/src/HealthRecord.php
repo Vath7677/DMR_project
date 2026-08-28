@@ -22,6 +22,8 @@ class HealthRecord extends Model {
         'bmi',
         'attending_doctor',
         'note',
+        'fee',
+        'payment_status',
         'attachment_url'
     ];
 }

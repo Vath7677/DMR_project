@@ -1,6 +1,6 @@
 <template>
   <div class="relative min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 lg:p-8">
-    
+        
     <!-- Grid Background Layer -->
     <div class="absolute inset-0 z-2 bg-[size:40px_40px] bg-[linear-gradient(to_right,rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.05)_1px,transparent_1px)]"></div>
     
@@ -60,7 +60,7 @@
               <input 
                 v-model="email" 
                 type="email" 
-                placeholder="doctor@gamil.com" 
+                placeholder="User@gamil.com"
                 class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600
                 focus:border-teal-600 sm:text-sm bg-gray-50/50 outline-none transition-colors"
                 required/>
