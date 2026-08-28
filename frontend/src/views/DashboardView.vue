@@ -387,20 +387,25 @@ const chartOptions = computed(() => {
         display: false
       },
       tooltip: {
-        backgroundColor: '#1e293b',
-        titleFont: { size: 13, family: 'Inter' },
-        bodyFont: { size: 13, family: 'Inter' },
+        backgroundColor: '#0f172a',
+        titleFont: { size: 12, weight: 'bold' as const, family: 'Inter' },
+        bodyFont: { size: 12, family: 'Inter' },
         padding: 10,
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
-          title: (items: any) => {
+          title: (items: any[]) => {
+            if (!items.length) return ''
             const idx = items[0]?.dataIndex
-            const dayInfo = last7DaysInfo.value[idx]
-            return dayInfo ? `${dayInfo.shortDay}, ${dayInfo.shortDate}` : ''
+            const dayInfo = weeklyDaysInfo.value[idx]
+            return dayInfo ? `${dayInfo.shortDay}, ${dayInfo.shortDate}` : items[0].label
           },
           label: (item: any) => {
-            return ` Health Records: ${item.raw}`
+            const count = item.raw || 0
+            return [
+              ` 📋 Consultations: ${count} ${count === 1 ? 'record' : 'records'}`,
+              ` ✨ Status: ${count > 0 ? 'Logged' : 'No records'}`
+            ]
           }
         }
       }
