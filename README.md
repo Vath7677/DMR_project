@@ -108,10 +108,6 @@ During the full codebase audit, several issues and performance bottlenecks were 
    npm run dev
    ```
 2. Open browser at `http://localhost:5175`.
-3. Sign in with default credentials:
-   - **Email**: `admin@gmail.com`
-   - **Password**: `12345678` (or your configured admin password).
-
 ---
 
 ## 🔒 Security & Privacy Practices
