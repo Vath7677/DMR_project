@@ -72,8 +72,8 @@
           <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
             <div class="flex justify-between items-center pb-6 border-b border-slate-100 mb-6 font-sans">
               <div>
-                <h3 class="text-[16px] font-bold text-slate-800 font-heading">Health Records - Last 7 Days</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Daily logged medical encounters and health notes</p>
+                <h3 class="text-[16px] font-bold text-slate-800 font-heading">Weekly Health Records</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Daily logged medical encounters (Sunday to Saturday)</p>
               </div>
               <span class="px-3 py-1 bg-teal-50 text-teal-700 border border-teal-100 rounded-full text-[12px] font-bold tracking-wide flex items-center gap-1.5 font-sans">
                 <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
@@ -310,16 +310,23 @@ onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
 })
 
-const last7DaysInfo = computed(() => {
+const weeklyDaysInfo = computed(() => {
+  const now = new Date()
+  const currentDayOfWeek = now.getDay() // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  
+  // Find Sunday of the current week
+  const sunday = new Date(now)
+  sunday.setDate(now.getDate() - currentDayOfWeek)
+  
   const days = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sunday)
+    d.setDate(sunday.getDate() + i)
     const year = d.getFullYear()
     const month = String(d.getMonth() + 1).padStart(2, '0')
     const day = String(d.getDate()).padStart(2, '0')
     const isoDate = `${year}-${month}-${day}`
-    const shortDay = d.toLocaleDateString('en-US', { weekday: 'short' })
+    const shortDay = d.toLocaleDateString('en-US', { weekday: 'short' }) // Sun, Mon, Tue, Wed, Thu, Fri, Sat
     const shortDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     days.push({
       dateObj: d,
@@ -332,9 +339,9 @@ const last7DaysInfo = computed(() => {
 })
 
 const chartData = computed(() => {
-  const labels = last7DaysInfo.value.map(d => d.shortDay)
+  const labels = weeklyDaysInfo.value.map(d => d.shortDay)
   
-  const counts = last7DaysInfo.value.map(dayInfo => {
+  const counts = weeklyDaysInfo.value.map(dayInfo => {
     return healthRecordsList.value.filter(rec => {
       const recDateStr = rec.date || rec.created_at
       if (!recDateStr) return false
