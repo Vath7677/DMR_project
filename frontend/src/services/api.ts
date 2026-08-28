@@ -1,8 +1,11 @@
-// frontend/src/services/api.ts
+const isLocal = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' || 
+  window.location.hostname === '127.0.0.1'
+);
 
-export const API_BASE_URL = 'http://localhost/DMR_project/backend/public';
-
-// export const API_BASE_URL = 'https://dmr-project-mwmp.onrender.com';
+export const API_BASE_URL = isLocal 
+  ? 'http://localhost/DMR_project/backend/public'
+  : 'https://dmr-project-mwmp.onrender.com';
 
 export const resolveServerUrl = (path: string) => {
   if (!path) return '';
