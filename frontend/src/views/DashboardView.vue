@@ -403,8 +403,8 @@ const chartOptions = computed(() => {
           label: (item: any) => {
             const count = item.raw || 0
             return [
-              ` 📋 Consultations: ${count} ${count === 1 ? 'record' : 'records'}`,
-              ` ✨ Status: ${count > 0 ? 'Logged' : 'No records'}`
+              ` Consultations: ${count} ${count === 1 ? 'record' : 'records'}`,
+              ` Status: ${count > 0 ? 'Logged' : 'No records'}`
             ]
           }
         }
