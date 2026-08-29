@@ -114,7 +114,7 @@ During the full codebase audit, several issues and performance bottlenecks were 
 2. Open browser at `http://localhost:5175`.
 ---
 
-## 🔒 Security & Privacy Practices
+##  Security & Privacy Practices
 - **Never push code to GitHub without explicit user permission.**
 - Password hashing uses `PASSWORD_BCRYPT`.
 - XSS prevention uses strict input sanitization on all POST/PUT endpoints.
