@@ -502,7 +502,7 @@
                     <label class="text-[13px] font-medium text-slate-700">Patient Name <span class="text-rose-500">*</span></label>
                     <input list="recent-patients" type="text" v-model="newRecord.patientName" @keydown.enter.prevent="recordForm?.requestSubmit()" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition-colors" />
                     <datalist id="recent-patients">
-                      <option v-for="p in allPatients" :key="p.id" :value="p.name">{{ p.id }}</option>
+                      <option v-for="p in suggestedPatients" :key="p.id" :value="p.name">{{ p.id }}</option>
                     </datalist>
                   </div>
                   <div class="space-y-1.5">
@@ -1671,15 +1671,31 @@ const loadRecentPatients = () => {
     const stored = localStorage.getItem('recentPatients')
     if (stored) {
       const parsed = JSON.parse(stored) as RecentPatient[]
-      const oneHour = 60 * 60 * 1000
+      const twentyFourHours = 24 * 60 * 60 * 1000
       const now = Date.now()
-      // Only keep suggestions added within the last hour
-      recentPatients.value = parsed.filter(p => now - p.timestamp < oneHour)
+      // Keep suggestions added or used within the last 24 hours
+      recentPatients.value = parsed.filter(p => now - p.timestamp < twentyFourHours)
     }
   } catch (e) {
     console.error('Failed to load recent patients', e)
   }
 }
+
+// 24-hour suggested patients prioritized at top, followed by all remaining registered patients (allowing all)
+const suggestedPatients = computed(() => {
+  const twentyFourHours = 24 * 60 * 60 * 1000
+  const now = Date.now()
+  const recentIds = new Set(
+    recentPatients.value
+      .filter(rp => (now - rp.timestamp) < twentyFourHours)
+      .map(rp => rp.id)
+  )
+
+  const recents = allPatients.value.filter(p => recentIds.has(p.id))
+  const others = allPatients.value.filter(p => !recentIds.has(p.id))
+
+  return [...recents, ...others]
+})
 
 onMounted(() => {
   loadRecentPatients()
@@ -2087,16 +2103,26 @@ const saveRecord = async () => {
       }
     } else {
       await api.postFormData('/api/health-records', payload)
-      // Remove from recent patients suggestions once a record is added
+      // Keep/refresh patient in recent patients suggestions (for 24 hours)
       try {
-        const stored = localStorage.getItem('recentPatients')
-        if (stored) {
-          const parsed = JSON.parse(stored) as RecentPatient[]
-          const updated = parsed.filter(p => p.id !== newRecord.value.patientId)
-          localStorage.setItem('recentPatients', JSON.stringify(updated))
-          loadRecentPatients()
+        const stored = localStorage.getItem('recentPatients') || '[]'
+        const parsed = JSON.parse(stored) as RecentPatient[]
+        const twentyFourHours = 24 * 60 * 60 * 1000
+        const now = Date.now()
+        const updated = parsed.filter(p => p.id !== newRecord.value.patientId && (now - p.timestamp) < twentyFourHours)
+        
+        if (newRecord.value.patientId && newRecord.value.patientName) {
+          updated.unshift({
+            id: newRecord.value.patientId,
+            name: newRecord.value.patientName,
+            timestamp: now
+          })
         }
-      } catch (e) {}
+        localStorage.setItem('recentPatients', JSON.stringify(updated))
+        loadRecentPatients()
+      } catch (e) {
+        console.error('Failed to update recent patients', e)
+      }
     }
     
     isAddModalOpen.value = false

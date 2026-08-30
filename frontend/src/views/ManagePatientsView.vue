@@ -815,16 +815,18 @@ const savePatient = async () => {
     } else {
       const response = await api.post('/api/patients', payload)
       
-      // Save to recent patients suggestion queue (for Health Records 1-hour recommendation)
+      // Save to recent patients suggestion queue (for Health Records 24-hour recommendation)
       try {
         if (response && response.status === 'success' && response.patient) {
           const recentStr = localStorage.getItem('recentPatients') || '[]'
           const recent = JSON.parse(recentStr)
-          const filtered = recent.filter((r: any) => r.id !== response.patient.id)
-          filtered.push({ 
+          const twentyFourHours = 24 * 60 * 60 * 1000
+          const now = Date.now()
+          const filtered = recent.filter((r: any) => r.id !== response.patient.id && (now - (r.timestamp || 0)) < twentyFourHours)
+          filtered.unshift({ 
             id: response.patient.id, 
             name: response.patient.name, 
-            timestamp: Date.now() 
+            timestamp: now 
           })
           localStorage.setItem('recentPatients', JSON.stringify(filtered))
         }
