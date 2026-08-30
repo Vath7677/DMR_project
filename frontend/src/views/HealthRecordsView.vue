@@ -1681,20 +1681,17 @@ const loadRecentPatients = () => {
   }
 }
 
-// 24-hour suggested patients prioritized at top, followed by all remaining registered patients (allowing all)
+// Strictly suggest ONLY patients active/created within the last 24 hours.
+// Once 24 hours have elapsed, they will NO LONGER be suggested in the dropdown.
 const suggestedPatients = computed(() => {
   const twentyFourHours = 24 * 60 * 60 * 1000
   const now = Date.now()
-  const recentIds = new Set(
-    recentPatients.value
-      .filter(rp => (now - rp.timestamp) < twentyFourHours)
-      .map(rp => rp.id)
-  )
+  const activeRecentPatients = recentPatients.value.filter(rp => (now - rp.timestamp) < twentyFourHours)
 
-  const recents = allPatients.value.filter(p => recentIds.has(p.id))
-  const others = allPatients.value.filter(p => !recentIds.has(p.id))
-
-  return [...recents, ...others]
+  return activeRecentPatients.map(rp => {
+    const sys = allPatients.value.find(p => p.id === rp.id)
+    return sys || { id: rp.id, name: rp.name }
+  })
 })
 
 onMounted(() => {
@@ -1935,6 +1932,7 @@ const openAddModal = () => {
     fee: 35,
     payment_status: 'Paid'
   }
+  loadRecentPatients()
   isAddModalOpen.value = true
 }
 
