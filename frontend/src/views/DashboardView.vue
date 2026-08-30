@@ -73,7 +73,7 @@
             <div class="flex justify-between items-center pb-6 border-b border-slate-100 mb-6 font-sans">
               <div>
                 <h3 class="text-[16px] font-bold text-slate-800 font-heading">Weekly Health Records</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Daily logged medical encounters (Sunday to Saturday)</p>
+                <p class="text-xs text-slate-400 mt-0.5">Daily logged medical encounters (Last 7 Days)</p>
               </div>
               <span class="px-3 py-1 bg-teal-50 text-teal-700 border border-teal-100 rounded-full text-[12px] font-bold tracking-wide flex items-center gap-1.5 font-sans">
                 <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
@@ -312,22 +312,18 @@ onUnmounted(() => {
 
 const weeklyDaysInfo = computed(() => {
   const now = new Date()
-  const currentDayOfWeek = now.getDay() // 0 = Sun, 1 = Mon, ..., 6 = Sat
   
-  // Find Sunday of the current week
-  const sunday = new Date(now)
-  sunday.setDate(now.getDate() - currentDayOfWeek)
-  
+  // Calculate rolling last 7 days ending on today (6 days ago through today)
   const days = []
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(sunday)
-    d.setDate(sunday.getDate() + i)
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(now.getDate() - i)
     const year = d.getFullYear()
     const month = String(d.getMonth() + 1).padStart(2, '0')
     const day = String(d.getDate()).padStart(2, '0')
     const isoDate = `${year}-${month}-${day}`
-    const shortDay = d.toLocaleDateString('en-US', { weekday: 'short' }) // Sun, Mon, Tue, Wed, Thu, Fri, Sat
-    const shortDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    const shortDay = d.toLocaleDateString('en-US', { weekday: 'short' }) // e.g. Mon, Tue...
+    const shortDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) // e.g. Aug 24
     days.push({
       dateObj: d,
       isoDate,
